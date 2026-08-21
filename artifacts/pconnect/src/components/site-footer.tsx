@@ -5,12 +5,12 @@ import { WHATSAPP_GROUP_URL } from "@/lib/whatsapp.ts";
 
 export default function SiteFooter() {
   return (
-    <footer className="border-t border-white/10 bg-[#0c0316] px-4 py-12 md:px-8">
+    <footer className="border-t border-white/10 bg-[#0c0316] px-4 py-8 md:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-10 md:grid-cols-4">
           <div>
             <Logo />
-            <p className="mt-4 max-w-xs text-sm text-muted-foreground">Fast, reliable MikroTik Wi-Fi vouchers. Buy instantly, connect anywhere, anytime.</p>
+            <p className="mt-2 max-w-xs text-sm text-muted-foreground">Fast, reliable MikroTik Wi-Fi vouchers. Buy instantly, connect anywhere, anytime.</p>
             <a href={WHATSAPP_GROUP_URL} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[#25D366] hover:underline">
               <MessageCircle className="size-4" />Join our WhatsApp community
             </a>
@@ -39,7 +39,7 @@ export default function SiteFooter() {
             </ul>
           </div>
         </div>
-        <div className="mt-10 border-t border-white/10 pt-6 text-center text-xs text-muted-foreground">&copy; 2026 <a href="https://pcyberict.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">PCYBER ICT SERVICES</a>. All rights reserved.</div>
+        <div className="mt-8 border-t border-white/10 pt-4 text-center text-xs text-muted-foreground">&copy; 2026 <a href="https://pcyberict.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">PCYBER ICT SERVICES</a>. All rights reserved.</div>
       </div>
     </footer>
   );
