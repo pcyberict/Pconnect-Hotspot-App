@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Pconnect Hotspot App"
+description = "A voucher hotspot service for buying internet access, managing wallet deposits, and administering voucher inventory and plans."
+version = "1.0.0"
+id = "artifacts/pconnect"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20402
+
+[services.development]
+run = "pnpm --filter @workspace/pconnect run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/pconnect", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/pconnect/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20402"
+BASE_PATH = "/"

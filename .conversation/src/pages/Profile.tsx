@@ -1,0 +1,129 @@
+import { useState } from "react";
+import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation } from "convex/react";
+import { ConvexError } from "convex/values";
+import { toast } from "sonner";
+import { User, Mail, Phone, Save, LogOut, ShieldCheck } from "lucide-react";
+import { api } from "@/convex/_generated/api.js";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth.ts";
+
+function ProfileInner() {
+  const me = useQuery(api.users.getCurrentUser, {});
+  const updateProfile = useMutation(api.users.updateMyProfile);
+  const { signout } = useAuth();
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+
+  if (me != null && !initialized) {
+    setName(me.name ?? "");
+    setPhone(me.phone ?? "");
+    setInitialized(true);
+  }
+
+  if (me === undefined || me === null) {
+    return (
+      <div className="mx-auto max-w-xl px-4 py-12">
+        <Skeleton className="h-9 w-48 mb-2" />
+        <Skeleton className="h-5 w-64 mb-8" />
+        <Skeleton className="h-72 w-full rounded-3xl" />
+      </div>
+    );
+  }
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await updateProfile({ name: name || undefined, phone: phone || undefined });
+      toast.success("Profile updated!");
+    } catch (e) {
+      const msg = e instanceof ConvexError ? (e.data as { message?: string }).message : "Failed";
+      toast.error(msg ?? "Error updating profile");
+    } finally { setSaving(false); }
+  };
+
+  const initials = (me.name ?? me.email ?? "U").slice(0, 2).toUpperCase();
+
+  return (
+    <div className="mx-auto max-w-xl px-4 py-10 md:px-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-extrabold tracking-tight text-white">My Profile</h1>
+        <p className="mt-1 text-sm text-white/40">Manage your personal account details.</p>
+      </div>
+      <div className="relative overflow-hidden rounded-3xl border border-[#7519e9]/40 bg-gradient-to-br from-[#7519e9]/35 via-[#b20ed2]/20 to-[#ff2549]/15 p-6 mb-5 shadow-[0_0_50px_rgba(117,25,233,0.15)]">
+        <div className="pointer-events-none absolute -top-10 -right-10 size-44 rounded-full bg-[#df20ba]/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-8 left-0 size-36 rounded-full bg-[#7519e9]/15 blur-3xl" />
+        <div className="relative flex items-center gap-4">
+          <div className="flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#7519e9] to-[#df20ba] text-white text-2xl font-extrabold shadow-lg shrink-0">
+            {initials}
+          </div>
+          <div className="min-w-0">
+            <div className="text-xl font-extrabold text-white truncate">{me.name || "No name set"}</div>
+            <div className="text-sm text-white/50 truncate">{me.email ?? "No email"}</div>
+            {me.role === "admin" && (
+              <div className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-[#7519e9]/40 bg-[#7519e9]/20 px-2.5 py-0.5 text-xs font-semibold text-purple-300">
+                <ShieldCheck size={11} /> Admin
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="relative overflow-hidden rounded-3xl border border-[#7519e9]/20 bg-gradient-to-br from-[#1a0b30]/90 via-[#150925]/90 to-[#0e0620]/90 shadow-[0_0_40px_rgba(117,25,233,0.06)]">
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7519e9]/50 to-transparent" />
+        <div className="p-6 space-y-5">
+          <div>
+            <label className="flex items-center gap-1.5 text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">
+              <User size={12} /> Full Name
+            </label>
+            <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#7519e9]/60 focus:ring-1 focus:ring-[#7519e9]/40 transition-all" />
+          </div>
+          <div>
+            <label className="flex items-center gap-1.5 text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">
+              <Mail size={12} /> Email Address
+            </label>
+            <input type="email" value={me?.email ?? ""} disabled className="w-full rounded-2xl border border-white/8 bg-white/[0.02] px-4 py-3 text-sm text-white/35 cursor-not-allowed" />
+            <p className="mt-1.5 text-xs text-white/25 pl-1">Email is managed by your auth provider and cannot be changed here.</p>
+          </div>
+          <div>
+            <label className="flex items-center gap-1.5 text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">
+              <Phone size={12} /> Phone Number
+            </label>
+            <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="e.g. 08012345678" className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#7519e9]/60 focus:ring-1 focus:ring-[#7519e9]/40 transition-all" />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <Button variant="glossy" className="flex-1 h-11" disabled={saving} onClick={() => void handleSave()}>
+              <Save size={14} /> {saving ? "Saving…" : "Save Changes"}
+            </Button>
+            <Button variant="secondary" className="h-11 px-4 border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300" onClick={() => void signout()}>
+              <LogOut size={14} /> Sign Out
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Profile() {
+  return (
+    <>
+      <Authenticated><ProfileInner /></Authenticated>
+      <Unauthenticated>
+        <div className="flex min-h-[70vh] flex-col items-center justify-center gap-4 px-4 text-center">
+          <h1 className="text-2xl font-bold">Sign in to view your profile</h1>
+          <Button asChild variant="glossy"><Link to="/login">Sign In / Register</Link></Button>
+        </div>
+      </Unauthenticated>
+      <AuthLoading>
+        <div className="mx-auto max-w-xl px-4 py-12">
+          <Skeleton className="h-9 w-48 mb-2" />
+          <Skeleton className="h-5 w-64 mb-8" />
+          <Skeleton className="h-72 w-full rounded-3xl" />
+        </div>
+      </AuthLoading>
+    </>
+  );
+}
