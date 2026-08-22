@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { formatNaira } from "@/lib/plans.ts";
 import { FeatureIcon } from "@/pages/admin/AdminPlans.tsx";
+import { useSiteName } from "@/lib/site-settings.ts";
 
 type Id<T extends string> = string;
 type PlanFeature = { icon: string; text: string };
@@ -42,6 +43,7 @@ function VaultDialog({ result, hotspotUrl, onClose }: {
   onClose: () => void;
 }) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const siteName = useSiteName();
 
   const copy = (text: string, field: string) => {
     void navigator.clipboard.writeText(text).then(() => {
@@ -52,7 +54,7 @@ function VaultDialog({ result, hotspotUrl, onClose }: {
   };
 
   const copyAll = () => {
-    const text = `PCyber Connect Voucher\nPlan: ${result.planName}\nUsername: ${result.username}\nPassword: ${result.password}`;
+    const text = `${siteName} Voucher\nPlan: ${result.planName}\nUsername: ${result.username}\nPassword: ${result.password}`;
     copy(text, "All details");
   };
 

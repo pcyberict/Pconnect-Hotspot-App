@@ -3,6 +3,7 @@ import { Users, ShoppingCart, Ticket, TrendingUp, BarChart2, PackageCheck } from
 import { api } from "@/lib/pconnect-api.ts";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { formatNaira } from "@/lib/plans.ts";
+import { useSiteName } from "@/lib/site-settings.ts";
 
 function StatCard({ label, value, icon: Icon, accent }: { label: string; value: string | number; icon: React.ElementType; accent?: string }) {
   return (
@@ -21,6 +22,7 @@ function StatCard({ label, value, icon: Icon, accent }: { label: string; value: 
 export default function AdminOverview() {
   const stats = useQuery(api.vouchers.getAdminStats, {});
   const inventory = useQuery(api.vouchers.getInventoryCounts, {});
+  const siteName = useSiteName();
 
   if (stats === undefined || inventory === undefined) {
     return (
@@ -36,7 +38,7 @@ export default function AdminOverview() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-white mb-1">Admin Overview</h1>
-      <p className="text-sm text-white/40 mb-6">All-time stats for PCyber Connect.</p>
+      <p className="text-sm text-white/40 mb-6">All-time stats for {siteName}.</p>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard label="Total Users" value={stats.totalUsers} icon={Users} />
         <StatCard label="Total Sales" value={stats.totalPurchases} icon={ShoppingCart} />

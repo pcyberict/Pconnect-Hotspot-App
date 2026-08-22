@@ -159,7 +159,7 @@ export default function AdminSettings() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-white">Site Settings</h1>
-          <p className="text-sm text-white/40 mt-0.5">Configure your PCyber Connect platform.</p>
+          <p className="text-sm text-white/40 mt-0.5">Configure your {form.site_name.trim() || "[Site Name]"} platform.</p>
         </div>
         <Button variant="glossy" size="sm" disabled={saving} onClick={() => void handleSave()}><Save size={14} /> {saving ? "Saving…" : "Save Changes"}</Button>
       </div>

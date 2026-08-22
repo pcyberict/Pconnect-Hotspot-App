@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";
 import { formatNaira } from "@/lib/plans.ts";
+import { useSiteName } from "@/lib/site-settings.ts";
 import {
   Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent,
 } from "@/components/ui/empty.tsx";
@@ -56,10 +57,11 @@ function VoucherCard({ p, hotspotUrl }: {
   hotspotUrl: string | null;
 }) {
   const [revealed, setRevealed] = useState(false);
+  const siteName = useSiteName();
 
   const copyAll = () => {
     if (!p.voucher) return;
-    const text = `PCyber Connect Voucher\nPlan: ${p.planName}\nUsername: ${p.voucher.username}\nPassword: ${p.voucher.password}\nDate: ${new Date(p.createdAt).toLocaleString()}`;
+    const text = `${siteName} Voucher\nPlan: ${p.planName}\nUsername: ${p.voucher.username}\nPassword: ${p.voucher.password}\nDate: ${new Date(p.createdAt).toLocaleString()}`;
     void navigator.clipboard.writeText(text).then(() => toast.success("All details copied!"));
   };
 

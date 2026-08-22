@@ -23,6 +23,7 @@ import { formatNaira } from "@/lib/plans.ts";
 import { WHATSAPP_GROUP_URL } from "@/lib/whatsapp.ts";
 import WhatsAppIcon from "@/components/whatsapp-icon.tsx";
 import { api, useConvexAuth, useMutation, useQuery } from "@/lib/pconnect-api.ts";
+import { useSiteName } from "@/lib/site-settings.ts";
 
 const BG_URL = "https://hercules-cdn.com/file_N4vw0dKasw7kaIkScQbfJFXL";
 
@@ -88,6 +89,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 export default function Index() {
   const navigate = useNavigate();
   const { isAuthenticated } = useConvexAuth();
+  const siteName = useSiteName();
   const plans = useQuery<HomePlan[]>(api.voucherPlans.listActivePlans, {});
   const purchaseVoucher = useMutation(api.vouchers.purchaseVoucher);
   const [buyingPlan, setBuyingPlan] = useState<string | null>(null);
@@ -210,7 +212,7 @@ export default function Index() {
 
       <section className="bg-[#23103e]/30 px-4 py-16">
         <div className="mx-auto max-w-7xl">
-          <h2 className="mb-2 text-center text-2xl font-bold text-white md:text-3xl">Why Choose{" "}<span className="bg-gradient-to-r from-[#7519e9] to-[#df20ba] bg-clip-text text-transparent">PRIMZY CONNECT?</span></h2>
+          <h2 className="mb-2 text-center text-2xl font-bold text-white md:text-3xl">Why Choose{" "}<span className="bg-gradient-to-r from-[#7519e9] to-[#df20ba] bg-clip-text text-transparent">{siteName}?</span></h2>
           <p className="mb-10 text-center text-sm text-white/50">Everything you need for seamless internet connectivity</p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {BENEFITS.map(({ icon: Icon, title, desc }, i) => (

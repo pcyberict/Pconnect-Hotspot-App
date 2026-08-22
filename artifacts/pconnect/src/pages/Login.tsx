@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth.ts";
 import SiteHeader from "@/components/site-header.tsx";
 import SiteFooter from "@/components/site-footer.tsx";
 import WhatsAppIcon from "@/components/whatsapp-icon.tsx";
+import { useSiteName } from "@/lib/site-settings.ts";
 
 const LOGO_URL = "https://hercules-cdn.com/file_1A2LMz3Ezgh2isR7FfmjJfGQ";
 const BG_URL = "https://hercules-cdn.com/file_TQBDRwwJWEDIkSRlcLoUdqD1";
@@ -13,6 +14,7 @@ const WHATSAPP_URL = "https://chat.whatsapp.com/your-group-invite";
 
 export default function Login() {
   const { login, register, isLoading } = useAuth();
+  const siteName = useSiteName();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [tab, setTab] = useState<"login" | "register">(
@@ -64,10 +66,7 @@ export default function Login() {
                 className="size-20 rounded-full object-contain mb-3 border-2 border-[#7519e9]/60 shadow-[0_0_24px_rgba(117,25,233,0.7),0_0_8px_rgba(255,255,255,0.15),0_4px_20px_rgba(0,0,0,0.6)]"
               />
               <div className="text-center">
-                <h1 className="text-xl font-bold tracking-widest">
-                  <span className="text-white">PRIMZY </span>
-                  <span className="text-[#df20ba]">CONNECT</span>
-                </h1>
+                <h1 className="text-xl font-bold tracking-widest text-white">{siteName}</h1>
                 <p className="text-white/50 text-xs mt-1">
                   Please log on to use the internet hotspot service
                 </p>

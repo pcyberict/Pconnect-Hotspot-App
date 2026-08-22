@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";
 import { formatNaira } from "@/lib/plans.ts";
 import { useAuth } from "@/hooks/use-auth.ts";
+import { useSiteName } from "@/lib/site-settings.ts";
 
 const QUICK_AMOUNTS = [500, 1000, 2000, 5000];
 
@@ -228,6 +229,7 @@ function WalletInner() {
   const createPending = useMutation(api.wallet.deposits.createPendingDeposit);
   const verifyDeposit = useAction(api.wallet.deposits.verifyDepositById);
   const { user } = useAuth();
+  const siteName = useSiteName();
   const scriptLoaded = useFlutterwaveScript();
 
   const [amount, setAmount] = useState("");
@@ -282,8 +284,8 @@ function WalletInner() {
       tx_ref: reference,
       amount: parsedAmount,
       currency: "NGN",
-      customer: { email: user?.profile.email ?? "customer@pcyberict.com", name: user?.profile.name ?? "PCyber Connect Customer" },
-      customizations: { title: "PCyber Connect", description: "Wallet Funding", logo: "https://hercules-cdn.com/file_PDusWTTXoxwuVrGaJFbrGp0y" },
+      customer: { email: user?.profile.email ?? "customer@pcyberict.com", name: user?.profile.name ?? `${siteName} Customer` },
+      customizations: { title: siteName, description: "Wallet Funding", logo: "https://hercules-cdn.com/file_PDusWTTXoxwuVrGaJFbrGp0y" },
       callback: (response) => {
         if (response.status === "successful") {
           toast.loading("Verifying payment…", { id: "verify" });
