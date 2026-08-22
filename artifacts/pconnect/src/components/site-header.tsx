@@ -36,15 +36,6 @@ export default function SiteHeader() {
     <header className="relative sticky top-0 z-40 border-b border-white/10 bg-[#10051f]/80 backdrop-blur-xl">
       <div className="mx-auto flex h-[60px] max-w-7xl items-center justify-between px-4 md:h-20 md:px-8">
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            aria-label="Toggle menu"
-            aria-expanded={open}
-            className="cursor-pointer rounded-lg p-2 text-white/70 transition-colors hover:bg-white/5 hover:text-white lg:hidden"
-            onClick={() => setOpen((v) => !v)}
-          >
-            {open ? <X className="size-5" /> : <Menu className="size-5" />}
-          </button>
           <Link to="/"><Logo /></Link>
         </div>
         <nav className="hidden items-center gap-6 lg:flex">
@@ -105,6 +96,15 @@ export default function SiteHeader() {
             )}
           </Link>
         </Authenticated>
+        <button
+          type="button"
+          aria-label="Toggle menu"
+          aria-expanded={open}
+          className="cursor-pointer rounded-lg p-2 text-white/70 transition-colors hover:bg-white/5 hover:text-white lg:hidden"
+          onClick={() => setOpen((v) => !v)}
+        >
+          {open ? <X className="size-5" /> : <Menu className="size-5" />}
+        </button>
       </div>
       {open && (
         <div className="absolute inset-x-0 top-full border-t border-white/10 bg-[#10051f]/95 px-4 py-4 shadow-2xl shadow-black/30 backdrop-blur-xl lg:hidden">
