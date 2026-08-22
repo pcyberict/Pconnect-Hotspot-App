@@ -94,8 +94,9 @@ export default function AdminLayout() {
               </nav>
             </aside>
 
-             <div className="flex min-w-0 flex-1 flex-col">
-               <header className="sticky top-0 z-40 flex items-center justify-between border-b border-white/10 bg-[#100520]/95 px-4 py-3 shadow-lg shadow-black/10 backdrop-blur-xl md:px-8 md:py-4">
+             <div className="relative flex min-w-0 flex-1 flex-col">
+               <div className="sticky top-0 z-40">
+               <header className="flex items-center justify-between border-b border-white/10 bg-[#100520]/95 px-4 py-3 shadow-lg shadow-black/10 backdrop-blur-xl md:px-8 md:py-4">
                  <div>
                    <div className="text-sm font-bold uppercase tracking-widest text-white/70">Admin Panel</div>
                    <div className="mt-0.5 hidden text-xs text-white/35 md:block">Manage your Primzy Connect workspace</div>
@@ -111,8 +112,8 @@ export default function AdminLayout() {
                  </button>
                </header>
 
-              {mobileOpen && (
-                <div className="border-b border-white/10 bg-[#100520] px-2 py-3 md:hidden">
+               {mobileOpen && (
+                 <div className="absolute inset-x-0 top-full border-b border-white/10 bg-[#100520]/95 px-2 py-3 shadow-2xl shadow-black/30 backdrop-blur-xl md:hidden">
                   {ADMIN_NAV.map(({ label, to, icon: Icon }) => (
                     <Link
                       key={to}
@@ -133,7 +134,8 @@ export default function AdminLayout() {
                     </Link>
                   </div>
                 </div>
-              )}
+               )}
+               </div>
 
                <main className="flex-1 overflow-auto p-4 pb-24 md:p-8 md:pb-28">
                 <Outlet />

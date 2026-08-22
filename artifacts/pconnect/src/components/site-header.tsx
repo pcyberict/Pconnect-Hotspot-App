@@ -31,7 +31,7 @@ export default function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#10051f]/80 backdrop-blur-xl">
+    <header className="relative sticky top-0 z-40 border-b border-white/10 bg-[#10051f]/80 backdrop-blur-xl">
       <div className="mx-auto flex h-[60px] max-w-7xl items-center justify-between px-4 md:h-20 md:px-8">
         <Link to="/"><Logo /></Link>
         <nav className="hidden items-center gap-6 lg:flex">
@@ -71,7 +71,7 @@ export default function SiteHeader() {
         </button>
       </div>
       {open && (
-        <div className="border-t border-white/10 bg-[#10051f] px-4 py-4 lg:hidden">
+        <div className="absolute inset-x-0 top-full border-t border-white/10 bg-[#10051f]/95 px-4 py-4 shadow-2xl shadow-black/30 backdrop-blur-xl lg:hidden">
           <nav className="flex flex-col gap-3">
             {NAV_LINKS.map((link) => (
               <Link key={link.label} to={link.to} onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-white/5 hover:text-foreground">
