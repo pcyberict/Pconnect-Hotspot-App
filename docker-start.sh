@@ -1,7 +1,9 @@
 #!/bin/sh
 set -eu
 
-node --enable-source-maps /app/api-dist/index.mjs &
+: "${DATABASE_URL:?DATABASE_URL must be configured in Coolify Runtime Variables}"
+
+API_PORT=8080 node --enable-source-maps /app/api-dist/index.mjs &
 api_pid=$!
 
 cleanup() {
