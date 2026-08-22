@@ -212,6 +212,38 @@ router.get("/admin/users", async (_req, res) => {
   res.json(result.rows.map(withId));
 });
 
+router.post("/admin/users", async (req, res) => {
+  const name = String(req.body?.name ?? "").trim();
+  const email = String(req.body?.email ?? "").trim().toLowerCase();
+  const phone = String(req.body?.phone ?? "").trim();
+  const password = String(req.body?.password ?? "");
+  const role = req.body?.role === "admin" ? "admin" : req.body?.role === "user" ? "user" : null;
+
+  if (!name || !email || !password || password.length < 6 || !role) {
+    return res.status(400).json({ error: "Name, email, password of at least 6 characters, and a valid role are required" });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await client.query(`INSERT INTO pconnect_users
+      (token_identifier,name,email,phone,password_hash,role)
+      VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+      [randomUUID(), name, email, phone || null, passwordHash(password), role]);
+    await client.query("INSERT INTO pconnect_wallets (user_id,balance) VALUES ($1,0)", [result.rows[0].id]);
+    await client.query("COMMIT");
+    return res.status(201).json({ ...withId(result.rows[0]), walletBalance: 0, purchaseCount: 0 });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    if (error instanceof Error && error.message.includes("duplicate")) {
+      return res.status(409).json({ error: "An account with this email already exists" });
+    }
+    return res.status(400).json({ error: "User could not be created" });
+  } finally {
+    client.release();
+  }
+});
+
 router.post("/admin/users/role", async (req, res) => {
   const role = req.body?.role === "admin" ? "admin" : req.body?.role === "user" ? "user" : null;
   if (!role || typeof req.body?.userId !== "string") {
