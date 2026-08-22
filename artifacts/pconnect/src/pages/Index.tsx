@@ -225,7 +225,7 @@ export default function Index() {
         </div>
       </section>
 
-      <section className="px-4 py-16">
+      <section className="bg-[#23103e]/30 px-4 py-16">
         <div className="mx-auto max-w-3xl">
           <h2 className="mb-2 text-center text-2xl font-bold text-white md:text-3xl">How It{" "}<span className="bg-gradient-to-r from-[#7519e9] to-[#df20ba] bg-clip-text text-transparent">Works</span></h2>
           <p className="mb-10 text-center text-sm text-white/50">Get connected in just 3 simple steps</p>
