@@ -164,6 +164,40 @@ router.get("/deposits", async (req, res) => {
   return res.json(result.rows.map(withId));
 });
 
+router.get("/notifications", async (req, res) => {
+  const user = await currentUser(tokenFor(req));
+  if (!user) return res.json({ items: [], unreadCount: 0 });
+  const result = await pool.query(
+    `SELECT id, title, message, type, read_at, created_at
+     FROM pconnect_notifications
+     WHERE user_id = $1
+     ORDER BY created_at DESC
+     LIMIT 50`,
+    [user.id],
+  );
+  return res.json({
+    items: result.rows.map(withId),
+    unreadCount: result.rows.filter((row) => !row.read_at).length,
+  });
+});
+
+router.post("/notifications/read", async (req, res) => {
+  const user = await currentUser(tokenFor(req));
+  if (!user) return res.status(401).json({ error: "Not logged in" });
+  await pool.query(
+    "UPDATE pconnect_notifications SET read_at = COALESCE(read_at, now()) WHERE id = $1 AND user_id = $2",
+    [req.body?.notificationId, user.id],
+  );
+  return res.json({ ok: true });
+});
+
+router.post("/notifications/read-all", async (req, res) => {
+  const user = await currentUser(tokenFor(req));
+  if (!user) return res.status(401).json({ error: "Not logged in" });
+  await pool.query("UPDATE pconnect_notifications SET read_at = now() WHERE user_id = $1 AND read_at IS NULL", [user.id]);
+  return res.json({ ok: true });
+});
+
 router.post("/users/sync", async (req, res) => {
   const token = tokenFor(req);
   const result = await pool.query(`INSERT INTO pconnect_users (token_identifier,name,email,role)
@@ -415,6 +449,11 @@ router.post("/deposits", async (req, res) => {
     (user_id,wallet_id,type,amount,previous_balance,new_balance,status,reference,provider,description)
     VALUES ($1,$2,'deposit',$3,$4,$4,'pending',$5,'flutterwave','Wallet funding via Flutterwave')`,
     [user.id, wallet.id, amount, wallet.balance, reference]);
+  await pool.query(
+    `INSERT INTO pconnect_notifications (user_id, title, message, type)
+     VALUES ($1, 'Wallet funding pending', $2, 'wallet')`,
+    [user.id, `Your ${amount.toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 })} wallet funding request is being processed.`],
+  );
   return res.json({ reference, amount });
 });
 

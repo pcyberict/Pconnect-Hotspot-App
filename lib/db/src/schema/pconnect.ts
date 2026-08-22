@@ -111,3 +111,13 @@ export const siteSettings = pgTable("pconnect_site_settings", {
 }, (table) => ({
   keyIdx: uniqueIndex("pconnect_site_settings_key_idx").on(table.key),
 }));
+
+export const notifications = pgTable("pconnect_notifications", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  type: text("type").notNull().default("info"),
+  readAt: timestamp("read_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ShieldCheck, LogOut, Home, Ticket, Info, HeadphonesIcon, UserRound } from "lucide-react";
+import { Menu, X, ShieldCheck, LogOut, Home, Ticket, Info, HeadphonesIcon, UserRound, Bell } from "lucide-react";
 import { Authenticated, Unauthenticated, AuthLoading, useQuery, useConvexAuth } from "@/lib/pconnect-api.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
@@ -23,7 +23,9 @@ export default function SiteHeader() {
   const { isAuthenticated } = useConvexAuth();
   const { signout } = useAuth();
   const me = useQuery(api.users.getCurrentUser, isAuthenticated ? {} : "skip");
+  const notifications = useQuery<{ items: { id: string }[]; unreadCount: number }>(api.notifications.listMine, isAuthenticated ? {} : "skip");
   const isAdmin = me?.role === "admin";
+  const unreadCount = notifications?.unreadCount ?? 0;
 
   const handleSignOut = () => {
     void signout();
@@ -33,7 +35,18 @@ export default function SiteHeader() {
   return (
     <header className="relative sticky top-0 z-40 border-b border-white/10 bg-[#10051f]/80 backdrop-blur-xl">
       <div className="mx-auto flex h-[60px] max-w-7xl items-center justify-between px-4 md:h-20 md:px-8">
-        <Link to="/"><Logo /></Link>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            aria-label="Toggle menu"
+            aria-expanded={open}
+            className="cursor-pointer rounded-lg p-2 text-white/70 transition-colors hover:bg-white/5 hover:text-white lg:hidden"
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
+          <Link to="/"><Logo /></Link>
+        </div>
         <nav className="hidden items-center gap-6 lg:flex">
           {NAV_LINKS.map((link) => (
             <Link key={link.label} to={link.to} className={cn("flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground", location.pathname === link.to && "text-foreground")}>
@@ -50,6 +63,18 @@ export default function SiteHeader() {
         </nav>
         <div className="hidden items-center gap-3 lg:flex">
           <Authenticated>
+            <Link
+              to="/notifications"
+              aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : "Notifications"}
+              className="relative rounded-xl p-2.5 text-white transition-colors hover:bg-white/5 hover:text-[#df20ba]"
+            >
+              <Bell size={19} />
+              {unreadCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-[#df20ba] px-1 text-[10px] font-bold leading-4 text-white">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </Link>
             <Button asChild variant="secondary"><Link to="/dashboard">Dashboard</Link></Button>
             {isAdmin && (
               <Button asChild variant="secondary" className="gap-1.5 border border-purple-500/40 text-purple-300">
@@ -66,9 +91,20 @@ export default function SiteHeader() {
           </Unauthenticated>
           <AuthLoading><Skeleton className="h-9 w-24" /></AuthLoading>
         </div>
-        <button type="button" aria-label="Toggle menu" className="cursor-pointer lg:hidden" onClick={() => setOpen((v) => !v)}>
-          {open ? <X className="size-6" /> : <Menu className="size-6" />}
-        </button>
+        <Authenticated>
+          <Link
+            to="/notifications"
+            aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : "Notifications"}
+            className="relative rounded-xl p-2 text-white transition-colors hover:bg-white/5 hover:text-[#df20ba] lg:hidden"
+          >
+            <Bell size={20} />
+            {unreadCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-[#df20ba] px-1 text-[10px] font-bold leading-4 text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </Link>
+        </Authenticated>
       </div>
       {open && (
         <div className="absolute inset-x-0 top-full border-t border-white/10 bg-[#10051f]/95 px-4 py-4 shadow-2xl shadow-black/30 backdrop-blur-xl lg:hidden">

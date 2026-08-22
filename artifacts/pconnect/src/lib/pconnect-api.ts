@@ -53,6 +53,11 @@ export const api = {
     setBulk: endpoint("siteSettings.setBulk"),
     setSecret: endpoint("siteSettings.setSecret"),
   },
+  notifications: {
+    listMine: endpoint("notifications.listMine"),
+    markRead: endpoint("notifications.markRead"),
+    markAllRead: endpoint("notifications.markAllRead"),
+  },
 };
 
 const API_BASE = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/api`;
@@ -97,6 +102,9 @@ async function request(fn: Endpoint, args: Args = {}, method: "GET" | "POST" = "
     "siteSettings.getMaskedSecret": "settings/masked",
     "siteSettings.setBulk": "settings",
     "siteSettings.setSecret": "settings/secret",
+    "notifications.listMine": "notifications",
+    "notifications.markRead": "notifications/read",
+    "notifications.markAllRead": "notifications/read-all",
   };
   const url = `${API_BASE}/${paths[fn] ?? fn}${method === "GET" && params.size ? `?${params}` : ""}`;
   const response = await fetch(url, {
