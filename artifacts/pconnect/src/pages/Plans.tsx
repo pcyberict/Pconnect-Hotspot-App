@@ -10,8 +10,10 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog.tsx";
 import { formatNaira } from "@/lib/plans.ts";
+import { FeatureIcon } from "@/pages/admin/AdminPlans.tsx";
 
 type Id<T extends string> = string;
+type PlanFeature = { icon: string; text: string };
 
 type Plan = {
   _id: Id<"voucherPlans">;
@@ -21,6 +23,7 @@ type Plan = {
   popular: boolean;
   availableCount: number;
   description?: string;
+  features?: PlanFeature[] | null;
 };
 
 type PurchaseResult = {
@@ -221,6 +224,16 @@ function PlansInner() {
                 </div>
                 <div className="mb-2 text-3xl font-extrabold text-white">{formatNaira(plan.price)}</div>
                 {plan.description && <p className="mb-3 text-xs text-white/50">{plan.description}</p>}
+                {plan.features && plan.features.length > 0 && (
+                  <ul className="mb-4 space-y-2 text-sm text-white/70">
+                    {plan.features.map((feature, featureIndex) => (
+                      <li key={`${feature.text}-${featureIndex}`} className="flex items-center gap-2">
+                        <FeatureIcon iconKey={feature.icon} size={15} />
+                        <span>{feature.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
 
                 <div className="mt-auto space-y-3 pt-3">
                   <div className="flex items-center justify-between text-xs">
