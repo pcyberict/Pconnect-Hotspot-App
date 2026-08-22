@@ -99,6 +99,15 @@ router.get("/admin/plans", async (_req, res) => {
 router.post("/admin/plans", async (req, res) => {
   const plan = req.body ?? {};
   try {
+    const durationHours = Number(plan.durationHours);
+    const price = Number(plan.price);
+    const sortOrder = Number(plan.sortOrder ?? 0);
+    const features = Array.isArray(plan.features) ? JSON.stringify(plan.features) : null;
+    if (!String(plan.name ?? "").trim() || !String(plan.durationLabel ?? "").trim() ||
+        !Number.isInteger(durationHours) || durationHours <= 0 ||
+        !Number.isFinite(price) || price < 0 || !Number.isInteger(sortOrder)) {
+      return res.status(400).json({ error: "Plan name, duration, price, and sort order must be valid" });
+    }
     if (plan.id) {
       const result = await pool.query(`UPDATE pconnect_voucher_plans SET
         name=COALESCE($1,name), duration_label=COALESCE($2,duration_label),
@@ -106,15 +115,15 @@ router.post("/admin/plans", async (req, res) => {
         data_limit=$5, description=$6, features=$7, popular=COALESCE($8,popular),
         active=COALESCE($9,active), sort_order=COALESCE($10,sort_order)
         WHERE id=$11 RETURNING *`,
-        [plan.name, plan.durationLabel, plan.durationHours, plan.price, plan.dataLimit || null,
-          plan.description || null, plan.features ?? null, plan.popular, plan.active, plan.sortOrder, plan.id]);
+        [String(plan.name).trim(), String(plan.durationLabel).trim(), durationHours, price, plan.dataLimit || null,
+          plan.description || null, features, Boolean(plan.popular), plan.active !== false, sortOrder, plan.id]);
       return res.json(withId(result.rows[0]));
     }
     const result = await pool.query(`INSERT INTO pconnect_voucher_plans
       (name,duration_label,duration_hours,price,data_limit,description,features,popular,active,sort_order)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
-      [plan.name, plan.durationLabel, plan.durationHours, plan.price, plan.dataLimit || null,
-        plan.description || null, plan.features ?? null, Boolean(plan.popular), plan.active !== false, plan.sortOrder ?? 0]);
+      [String(plan.name).trim(), String(plan.durationLabel).trim(), durationHours, price, plan.dataLimit || null,
+        plan.description || null, features, Boolean(plan.popular), plan.active !== false, sortOrder]);
     return res.json(withId(result.rows[0]));
   } catch (error) {
     return res.status(400).json({ error: error instanceof Error ? error.message : "Plan could not be saved" });
@@ -230,23 +239,48 @@ router.post("/admin/inventory/delete", async (req, res) => {
 });
 
 router.post("/admin/inventory/create", async (req, res) => {
+  const planId = String(req.body?.planId ?? "").trim();
+  const username = String(req.body?.username ?? "").trim();
+  const password = String(req.body?.password ?? "").trim();
+  if (!planId || !username || !password) {
+    return res.status(400).json({ error: "Plan, username, and password are required" });
+  }
   try {
     const result = await pool.query(`INSERT INTO pconnect_vouchers (plan_id,username,password,status,notes)
-      VALUES ($1,$2,$3,'available',$4) RETURNING *`, [req.body?.planId, String(req.body?.username).trim(), String(req.body?.password).trim(), req.body?.notes || null]);
+      VALUES ($1,$2,$3,'available',$4) RETURNING *`, [planId, username, password, req.body?.notes || null]);
     return res.json(result.rows[0]);
-  } catch { return res.status(400).json({ error: "Username already exists or plan is invalid" }); }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (message.includes("pconnect_vouchers_username_idx") || message.includes("duplicate key")) {
+      return res.status(409).json({ error: `A voucher with username "${username}" already exists. Use a unique username.` });
+    }
+    if (message.includes("foreign key")) {
+      return res.status(400).json({ error: "The selected plan no longer exists. Refresh and select a valid plan." });
+    }
+    return res.status(400).json({ error: "Voucher could not be added" });
+  }
 });
 
 router.post("/admin/inventory/import", async (req, res) => {
   const batch = req.body?.importBatchId ?? `batch-${Date.now()}`;
-  let inserted = 0; let skipped = 0;
-  for (const item of (req.body?.vouchers ?? [])) {
-    if (!item.username?.trim() || !item.password?.trim()) { skipped++; continue; }
+  const planId = String(req.body?.planId ?? "").trim();
+  const vouchers = Array.isArray(req.body?.vouchers) ? req.body.vouchers : [];
+  if (!planId) return res.status(400).json({ error: "Select a valid plan before importing vouchers" });
+  if (vouchers.length === 0) return res.status(400).json({ error: "Add at least one voucher row to import" });
+  const plan = await pool.query("SELECT id FROM pconnect_voucher_plans WHERE id=$1", [planId]);
+  if (!plan.rows[0]) return res.status(400).json({ error: "The selected plan no longer exists. Refresh and select a valid plan." });
+
+  let inserted = 0;
+  let skipped = 0;
+  for (const item of vouchers) {
+    const username = String(item?.username ?? "").trim();
+    const password = String(item?.password ?? "").trim();
+    if (!username || !password) { skipped++; continue; }
     const result = await pool.query(`INSERT INTO pconnect_vouchers (plan_id,username,password,status,import_batch_id)
-      VALUES ($1,$2,$3,'available',$4) ON CONFLICT (username) DO NOTHING`, [req.body?.planId, item.username.trim(), item.password.trim(), batch]);
+      VALUES ($1,$2,$3,'available',$4) ON CONFLICT (username) DO NOTHING`, [planId, username, password, String(batch)]);
     if (result.rowCount) inserted++; else skipped++;
   }
-  res.json({ inserted, skipped });
+  return res.json({ inserted, skipped });
 });
 
 router.post("/purchase", async (req, res) => {
