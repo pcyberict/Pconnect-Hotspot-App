@@ -94,13 +94,22 @@ export default function AdminLayout() {
               </nav>
             </aside>
 
-            <div className="flex flex-1 flex-col">
-              <header className="flex items-center justify-between border-b border-white/10 bg-[#100520] px-4 py-3 md:hidden">
-                <span className="text-sm font-bold text-white/70">Admin Panel</span>
-                <button onClick={() => setMobileOpen(v => !v)} className="cursor-pointer text-white/60">
-                  {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-                </button>
-              </header>
+             <div className="flex min-w-0 flex-1 flex-col">
+               <header className="sticky top-0 z-40 flex items-center justify-between border-b border-white/10 bg-[#100520]/95 px-4 py-3 shadow-lg shadow-black/10 backdrop-blur-xl md:px-8 md:py-4">
+                 <div>
+                   <div className="text-sm font-bold uppercase tracking-widest text-white/70">Admin Panel</div>
+                   <div className="mt-0.5 hidden text-xs text-white/35 md:block">Manage your Primzy Connect workspace</div>
+                 </div>
+                 <button
+                   type="button"
+                   aria-label={mobileOpen ? "Close admin navigation" : "Open admin navigation"}
+                   aria-expanded={mobileOpen}
+                   onClick={() => setMobileOpen(v => !v)}
+                   className="cursor-pointer rounded-lg p-2 text-white/60 transition-colors hover:bg-white/5 hover:text-white md:hidden"
+                 >
+                   {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+                 </button>
+               </header>
 
               {mobileOpen && (
                 <div className="border-b border-white/10 bg-[#100520] px-2 py-3 md:hidden">
@@ -126,9 +135,36 @@ export default function AdminLayout() {
                 </div>
               )}
 
-              <main className="flex-1 overflow-auto p-4 md:p-8">
+               <main className="flex-1 overflow-auto p-4 pb-24 md:p-8 md:pb-28">
                 <Outlet />
               </main>
+
+               <nav
+                 aria-label="Admin quick navigation"
+                 className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#100520]/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_32px_rgba(0,0,0,0.2)] backdrop-blur-xl md:px-8"
+               >
+                 <div className="mx-auto grid max-w-3xl grid-cols-4 gap-1">
+                   {ADMIN_NAV.filter(({ to }) => ["/admin/plans", "/admin/inventory", "/admin/purchases", "/admin/users"].includes(to)).map(({ label, to, icon: Icon }) => {
+                     const isActive = location.pathname.startsWith(to);
+                     return (
+                       <Link
+                         key={to}
+                         to={to}
+                         aria-current={isActive ? "page" : undefined}
+                         className={cn(
+                           "flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-2 text-[11px] font-medium transition-colors",
+                           isActive
+                             ? "bg-[#7519e9]/20 text-white"
+                             : "text-white/45 hover:bg-white/5 hover:text-white",
+                         )}
+                       >
+                         <Icon size={18} />
+                         <span>{label}</span>
+                       </Link>
+                     );
+                   })}
+                 </div>
+               </nav>
             </div>
           </div>
         </AdminGuard>
