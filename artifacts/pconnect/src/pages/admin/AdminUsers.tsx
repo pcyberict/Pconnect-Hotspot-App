@@ -39,6 +39,7 @@ export default function AdminUsers() {
   const deleteUser = useMutation(api.vouchers.deleteUser);
   const [changing, setChanging] = useState<Id<"users"> | null>(null);
   const [creating, setCreating] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
   const [newUser, setNewUser] = useState({ name: "", email: "", phone: "", password: "", role: "user" as "admin" | "user" });
   const [pendingAction, setPendingAction] = useState<{
     type: "role" | "delete";
@@ -73,6 +74,7 @@ export default function AdminUsers() {
       await createUser(newUser);
       toast.success(`${newUser.email} was added as a ${newUser.role === "admin" ? "admin" : "regular user"}`);
       setNewUser({ name: "", email: "", phone: "", password: "", role: "user" });
+      setShowCreate(false);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "User could not be created");
     } finally {
@@ -87,51 +89,53 @@ export default function AdminUsers() {
           <h1 className="text-2xl font-bold text-white mb-1">Users</h1>
           <p className="text-sm text-white/40">Add accounts and manage access to the dashboard.</p>
         </div>
-        <div className="hidden items-center gap-2 rounded-lg border border-[#7519e9]/30 bg-[#7519e9]/10 px-3 py-2 text-xs text-purple-200 sm:flex">
+        <Button size="sm" variant="glossy" onClick={() => setShowCreate((value) => !value)}>
           <Plus size={14} />
-          New account
-        </div>
+          {showCreate ? "Hide form" : "New account"}
+        </Button>
       </div>
 
-      <Card className="mb-8 border-white/10 bg-[#1a0b30]/60 text-white">
-        <CardHeader className="border-b border-white/10">
-          <CardTitle className="text-base">Add a new user</CardTitle>
-          <CardDescription className="text-white/45">Create login credentials and choose whether this account can access admin tools.</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <form onSubmit={(event) => void submitNewUser(event)} className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="new-user-name" className="text-white/70">Full name</Label>
-              <Input id="new-user-name" required value={newUser.name} onChange={(event) => setNewUser({ ...newUser, name: event.target.value })} placeholder="Jane Doe" className="border-white/10 bg-[#1a0b30]/60 text-white placeholder:text-white/25" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-user-email" className="text-white/70">Email address</Label>
-              <Input id="new-user-email" required type="email" value={newUser.email} onChange={(event) => setNewUser({ ...newUser, email: event.target.value })} placeholder="jane@example.com" className="border-white/10 bg-[#1a0b30]/60 text-white placeholder:text-white/25" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-user-phone" className="text-white/70">Phone <span className="text-white/35">(optional)</span></Label>
-              <Input id="new-user-phone" type="tel" value={newUser.phone} onChange={(event) => setNewUser({ ...newUser, phone: event.target.value })} placeholder="+234 ..." className="border-white/10 bg-[#1a0b30]/60 text-white placeholder:text-white/25" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-user-password" className="text-white/70">Temporary password</Label>
-              <Input id="new-user-password" required minLength={6} type="password" value={newUser.password} onChange={(event) => setNewUser({ ...newUser, password: event.target.value })} placeholder="At least 6 characters" className="border-white/10 bg-[#1a0b30]/60 text-white placeholder:text-white/25" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-user-role" className="text-white/70">Role</Label>
-              <select id="new-user-role" value={newUser.role} onChange={(event) => setNewUser({ ...newUser, role: event.target.value as "admin" | "user" })} className="flex h-9 w-full rounded-md border border-white/10 bg-[#1a0b30]/60 px-3 py-1 text-sm text-white shadow-sm focus:outline-none focus:ring-1 focus:ring-[#7519e9]">
-                <option value="user">Regular user</option>
-                <option value="admin">Administrator</option>
-              </select>
-            </div>
-            <div className="flex items-end">
-              <Button type="submit" disabled={creating} className="w-full md:w-auto">
-                <Plus size={16} />
-                {creating ? "Creating..." : "Create user"}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      {showCreate && (
+        <Card className="mb-8 border-white/10 bg-[#1a0b30]/60 text-white">
+          <CardHeader className="border-b border-white/10">
+            <CardTitle className="text-base">Add a new user</CardTitle>
+            <CardDescription className="text-white/45">Create login credentials and choose whether this account can access admin tools.</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <form onSubmit={(event) => void submitNewUser(event)} className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="new-user-name" className="text-white/70">Full name</Label>
+                <Input id="new-user-name" required value={newUser.name} onChange={(event) => setNewUser({ ...newUser, name: event.target.value })} placeholder="Jane Doe" className="border-white/10 bg-[#1a0b30]/60 text-white placeholder:text-white/25" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-user-email" className="text-white/70">Email address</Label>
+                <Input id="new-user-email" required type="email" value={newUser.email} onChange={(event) => setNewUser({ ...newUser, email: event.target.value })} placeholder="jane@example.com" className="border-white/10 bg-[#1a0b30]/60 text-white placeholder:text-white/25" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-user-phone" className="text-white/70">Phone <span className="text-white/35">(optional)</span></Label>
+                <Input id="new-user-phone" type="tel" value={newUser.phone} onChange={(event) => setNewUser({ ...newUser, phone: event.target.value })} placeholder="+234 ..." className="border-white/10 bg-[#1a0b30]/60 text-white placeholder:text-white/25" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-user-password" className="text-white/70">Temporary password</Label>
+                <Input id="new-user-password" required minLength={6} type="password" value={newUser.password} onChange={(event) => setNewUser({ ...newUser, password: event.target.value })} placeholder="At least 6 characters" className="border-white/10 bg-[#1a0b30]/60 text-white placeholder:text-white/25" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-user-role" className="text-white/70">Role</Label>
+                <select id="new-user-role" value={newUser.role} onChange={(event) => setNewUser({ ...newUser, role: event.target.value as "admin" | "user" })} className="flex h-9 w-full rounded-md border border-white/10 bg-[#1a0b30]/60 px-3 py-1 text-sm text-white shadow-sm focus:outline-none focus:ring-1 focus:ring-[#7519e9]">
+                  <option value="user">Regular user</option>
+                  <option value="admin">Administrator</option>
+                </select>
+              </div>
+              <div className="flex items-end">
+                <Button type="submit" disabled={creating} className="w-full md:w-auto">
+                  <Plus size={16} />
+                  {creating ? "Creating..." : "Create user"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
       {users === undefined ? (
         <div className="space-y-2">
