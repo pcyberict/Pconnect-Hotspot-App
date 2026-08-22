@@ -1,0 +1,51 @@
+2026-Aug-22 14:25:05.086047
+Docker 29.6.0 with BuildKit and Buildx detected on deployment server (localhost).
+2026-Aug-22 14:25:05.104974
+Starting deployment of pcyberict/Pconnect-Hotspot-App:main to localhost.
+2026-Aug-22 14:25:05.552831
+Preparing container with helper image: ghcr.io/coollabsio/coolify-helper:1.0.14
+2026-Aug-22 14:25:08.959091
+----------------------------------------
+2026-Aug-22 14:25:08.969073
+Importing pcyberict/Pconnect-Hotspot-App:main (commit sha bc3c0a95414fdcdc465210824591a7bc112dcbcc) to /artifacts/md030kwstm1pajrum89atklk.
+2026-Aug-22 14:25:12.757092
+Image not found (a11niqssvu146iw2et5wi77x:bc3c0a95414fdcdc465210824591a7bc112dcbcc). Building new image.
+2026-Aug-22 14:25:14.507912
+----------------------------------------
+2026-Aug-22 14:25:14.524910
+⚠️ Build-time environment variable warning: NODE_ENV=development
+2026-Aug-22 14:25:14.545045
+Affects: Node.js/npm/yarn/bun/pnpm
+2026-Aug-22 14:25:14.561023
+Issue: Skips devDependencies installation which are often required for building (webpack, typescript, etc.)
+2026-Aug-22 14:25:14.578500
+Recommendation: Uncheck "Available at Buildtime" or use "development" during build
+2026-Aug-22 14:25:14.591517
+2026-Aug-22 14:25:14.606008
+💡 Tips to resolve build issues:
+2026-Aug-22 14:25:14.620933
+1. Set these variables as "Runtime only" in the environment variables settings
+2026-Aug-22 14:25:14.638226
+2. Use different values for build-time (e.g., NODE_ENV=development for build)
+2026-Aug-22 14:25:14.659262
+3. Consider using multi-stage Docker builds to separate build and runtime environments
+2026-Aug-22 14:25:15.440514
+----------------------------------------
+2026-Aug-22 14:25:15.451205
+Building docker image started.
+2026-Aug-22 14:25:15.459792
+To check the current progress, click on Show Debug Logs.
+2026-Aug-22 14:25:45.759880
+Building docker image completed.
+2026-Aug-22 14:25:46.497245
+----------------------------------------
+2026-Aug-22 14:25:46.511582
+Rolling update started.
+2026-Aug-22 14:25:48.059565
+New container started.
+2026-Aug-22 14:25:48.082921
+Removing old containers.
+2026-Aug-22 14:26:19.768082
+Rolling update completed.
+2026-Aug-22 14:26:20.430720
+Gracefully shutting down build container: md030kwstm1pajrum89atklk
