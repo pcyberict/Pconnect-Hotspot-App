@@ -70,7 +70,7 @@ async function findOrCreateUser(email: string, name: string, role: "admin" | "us
   return created;
 }
 
-async function seed() {
+export async function seed() {
   const admin = await findOrCreateUser("admin@pconnect.local", "Pconnect Admin", "admin", "demo-user");
   await findOrCreateUser("demo@pconnect.local", "Demo Customer", "user", "demo-customer");
 
@@ -120,10 +120,3 @@ async function seed() {
 
   console.log(`Seeded ${plans.length} plans, ${plans.length * 3} demo vouchers, and demo users. Admin token: ${admin.token_identifier}`);
 }
-
-seed()
-  .catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());

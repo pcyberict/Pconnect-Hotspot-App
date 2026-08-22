@@ -11,6 +11,7 @@ Primzy Connect sells hotspot internet vouchers, manages wallet deposits, and pro
 - `pnpm --filter @workspace/db run push` — apply the Drizzle schema to development PostgreSQL
 - Required env: `DATABASE_URL` — the provisioned PostgreSQL connection string
 - Demo session: the web app uses the `demo-user` token; the seeded demo admin has a ₦2,500 wallet balance.
+- The combined Docker deployment bootstraps the PostgreSQL schema and idempotent demo data before starting the API.
 
 ## Stack
 
