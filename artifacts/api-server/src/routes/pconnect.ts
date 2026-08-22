@@ -196,8 +196,13 @@ router.post("/admin/users/role", async (req, res) => {
 });
 
 router.get("/admin/inventory/counts", async (_req, res) => {
-  const result = await pool.query(`SELECT status, COUNT(*)::int AS count FROM pconnect_vouchers GROUP BY status`);
-  res.json(Object.fromEntries(result.rows.map((r) => [r.status, r.count])));
+  const result = await pool.query(`SELECT
+    COUNT(*) FILTER (WHERE status = 'available')::int AS available,
+    COUNT(*) FILTER (WHERE status = 'reserved')::int AS reserved,
+    COUNT(*) FILTER (WHERE status = 'sold')::int AS sold,
+    COUNT(*) FILTER (WHERE status = 'disabled')::int AS disabled
+    FROM pconnect_vouchers`);
+  res.json(result.rows[0]);
 });
 
 router.get("/admin/inventory", async (req, res) => {

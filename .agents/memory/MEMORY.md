@@ -1,1 +1,2 @@
 - [PostgreSQL authentication](postgres-auth.md) — keep Pconnect login, roles, and password handling server-side after Convex removal.
+- [PostgreSQL bootstrap](postgres-bootstrap.md) — apply the Drizzle schema and run the idempotent demo seed before testing protected Pconnect routes.
