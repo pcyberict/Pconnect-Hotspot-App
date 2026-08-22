@@ -122,13 +122,13 @@ export default function AdminSettings() {
   useEffect(() => {
     if (settings) {
       setForm({
-        site_name: settings.site_name ?? DEFAULTS.site_name,
-        site_tagline: settings.site_tagline ?? DEFAULTS.site_tagline,
-        hotspot_url: settings.hotspot_url ?? DEFAULTS.hotspot_url,
-        whatsapp_group_url: settings.whatsapp_group_url ?? DEFAULTS.whatsapp_group_url,
-        whatsapp_support_number: settings.whatsapp_support_number ?? DEFAULTS.whatsapp_support_number,
-        support_email: settings.support_email ?? DEFAULTS.support_email,
-        footer_text: settings.footer_text ?? DEFAULTS.footer_text,
+        site_name: settings.siteName ?? DEFAULTS.site_name,
+        site_tagline: settings.siteTagline ?? DEFAULTS.site_tagline,
+        hotspot_url: settings.hotspotUrl ?? DEFAULTS.hotspot_url,
+        whatsapp_group_url: settings.whatsappGroupUrl ?? DEFAULTS.whatsapp_group_url,
+        whatsapp_support_number: settings.whatsappSupportNumber ?? DEFAULTS.whatsapp_support_number,
+        support_email: settings.supportEmail ?? DEFAULTS.support_email,
+        footer_text: settings.footerText ?? DEFAULTS.footer_text,
       });
     }
   }, [settings]);
