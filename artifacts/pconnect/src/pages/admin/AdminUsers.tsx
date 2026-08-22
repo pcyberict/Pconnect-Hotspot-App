@@ -7,9 +7,19 @@ import { Button } from "@/components/ui/button.tsx";
 import { formatNaira } from "@/lib/plans.ts";
 
 type Id<T extends string> = string;
+type AdminUser = {
+  _id: string;
+  name?: string | null;
+  email: string;
+  phone?: string | null;
+  walletBalance: number;
+  purchaseCount: number;
+  role?: string;
+  _creationTime: string;
+};
 
 export default function AdminUsers() {
-  const users = useQuery(api.vouchers.listAllUsers, {});
+  const users = useQuery<AdminUser[]>(api.vouchers.listAllUsers, {});
   const setRole = useMutation(api.vouchers.setUserRole);
   const [changing, setChanging] = useState<Id<"users"> | null>(null);
 

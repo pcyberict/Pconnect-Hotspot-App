@@ -14,8 +14,17 @@ import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";
 import { formatNaira } from "@/lib/plans.ts";
 
+type Purchase = {
+  _id: string;
+  planName: string;
+  durationLabel: string;
+  createdAt: string;
+  amount: number;
+  status: string;
+};
+
 function PurchasesInner() {
-  const purchases = useQuery(api.vouchers.getMyPurchases, {});
+  const purchases = useQuery<Purchase[]>(api.vouchers.getMyPurchases, {});
 
   if (purchases === undefined) {
     return (

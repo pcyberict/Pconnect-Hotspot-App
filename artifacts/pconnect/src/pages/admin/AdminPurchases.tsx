@@ -3,8 +3,19 @@ import { api } from "@/lib/pconnect-api.ts";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { formatNaira } from "@/lib/plans.ts";
 
+type AdminPurchase = {
+  _id: string;
+  userName: string;
+  userEmail: string;
+  planName: string;
+  voucherUsername: string;
+  amount: number;
+  status: string;
+  createdAt: string;
+};
+
 export default function AdminPurchases() {
-  const purchases = useQuery(api.vouchers.listAllPurchases, {});
+  const purchases = useQuery<AdminPurchase[]>(api.vouchers.listAllPurchases, {});
 
   return (
     <div>

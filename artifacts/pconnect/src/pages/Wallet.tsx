@@ -34,6 +34,15 @@ type FlutterwaveConfig = {
 
 type PaymentMethod = "bank" | "card" | null;
 
+type WalletTransaction = {
+  _id: string;
+  status: "successful" | "pending" | string;
+  type: string;
+  paymentChannel?: string;
+  createdAt: string;
+  amount: number;
+};
+
 type VirtualAccount = {
   accountNumber: string;
   bankName: string;
@@ -214,7 +223,7 @@ function BankTransferPanel({ amount, reference, onSuccess, onCancel }: {
 
 function WalletInner() {
   const wallet = useQuery(api.wallets.getMyWallet, {});
-  const depositHistory = useQuery(api.wallet.deposits.getMyDepositHistory, {});
+  const depositHistory = useQuery<WalletTransaction[]>(api.wallet.deposits.getMyDepositHistory, {});
   const publicKey = useQuery(api.siteSettings.getPublicKey, {});
   const createPending = useMutation(api.wallet.deposits.createPendingDeposit);
   const verifyDeposit = useAction(api.wallet.deposits.verifyDepositById);

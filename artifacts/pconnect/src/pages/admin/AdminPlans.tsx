@@ -63,6 +63,22 @@ type PlanForm = {
   active: boolean;
   sortOrder: number;
 };
+type AdminPlan = {
+  _id: string;
+  name: string;
+  durationLabel: string;
+  durationHours: number;
+  price: number;
+  dataLimit?: string | null;
+  description?: string | null;
+  features?: Feature[] | null;
+  popular: boolean;
+  active: boolean;
+  sortOrder: number;
+  availableCount: number;
+  soldCount: number;
+  disabledCount: number;
+};
 
 const EMPTY_FORM: PlanForm = {
   name: "",
@@ -300,7 +316,7 @@ function PlanFormPanel({ initial, onSave, onCancel }: {
 }
 
 export default function AdminPlans() {
-  const plans = useQuery(api.voucherPlans.listAllPlans, {});
+  const plans = useQuery<AdminPlan[]>(api.voucherPlans.listAllPlans, {});
   const createPlan = useMutation(api.voucherPlans.createPlan);
   const updatePlan = useMutation(api.voucherPlans.updatePlan);
 

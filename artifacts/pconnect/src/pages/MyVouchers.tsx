@@ -11,6 +11,17 @@ import {
   Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent,
 } from "@/components/ui/empty.tsx";
 
+type VoucherPurchase = {
+  _id: string;
+  planName: string;
+  durationLabel: string;
+  amount: number;
+  createdAt: string;
+  status: string;
+  voucher: { username: string; password: string } | null;
+  reference: string;
+};
+
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
   const handleCopy = () => {
@@ -140,7 +151,7 @@ function VoucherCard({ p, hotspotUrl }: {
 }
 
 function MyVouchersInner() {
-  const purchases = useQuery(api.vouchers.getMyPurchases, {});
+  const purchases = useQuery<VoucherPurchase[]>(api.vouchers.getMyPurchases, {});
   const hotspotUrl = useQuery(api.siteSettings.get, { key: "hotspot_url" });
 
   if (purchases === undefined) {

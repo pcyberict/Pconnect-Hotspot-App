@@ -9,6 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 type Id<T extends string> = string;
 
 type VoucherStatus = "available" | "reserved" | "sold" | "disabled";
+type InventoryPlan = { _id: string; name: string };
+type InventoryVoucher = { _id: string; planId: string; username: string; planName: string; status: VoucherStatus; soldAt?: string | null };
 
 const STATUS_COLORS: Record<VoucherStatus, string> = {
   available: "text-emerald-400 bg-emerald-500/15 border-emerald-500/30",
@@ -27,9 +29,9 @@ function StatCard({ label, value, color }: { label: string; value: number; color
 }
 
 export default function AdminInventory() {
-  const plans = useQuery(api.voucherPlans.listAllPlans, {});
+  const plans = useQuery<InventoryPlan[]>(api.voucherPlans.listAllPlans, {});
   const inventory = useQuery(api.vouchers.getInventoryCounts, {});
-  const vouchers = useQuery(api.vouchers.listVouchersAdminRich, {});
+  const vouchers = useQuery<InventoryVoucher[]>(api.vouchers.listVouchersAdminRich, {});
   const setStatus = useMutation(api.vouchers.setVoucherStatus);
   const deleteVoucher = useMutation(api.vouchers.deleteVoucher);
   const bulkImport = useMutation(api.vouchers.bulkImportVouchers);
