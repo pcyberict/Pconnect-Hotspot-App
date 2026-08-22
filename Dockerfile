@@ -30,7 +30,8 @@ WORKDIR /app
 
 RUN apt-get update \
   && apt-get install --no-install-recommends -y nginx \
-  && rm -rf /var/lib/apt/lists/* /etc/nginx/conf.d/default.conf
+  && rm -rf /var/lib/apt/lists/* \
+  && rm -f /etc/nginx/conf.d/default.conf /etc/nginx/sites-enabled/default
 
 COPY nginx.pconnect.conf /etc/nginx/conf.d/pconnect.conf
 COPY --from=build /app/artifacts/pconnect/dist/public /usr/share/nginx/html
