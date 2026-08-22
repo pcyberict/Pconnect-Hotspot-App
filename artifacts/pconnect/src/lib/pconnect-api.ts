@@ -118,7 +118,11 @@ async function request(fn: Endpoint, args: Args = {}, method: "GET" | "POST" = "
 
 export function useQuery<T = any>(fn: Endpoint, args: Args | "skip" = {}) {
   const { isAuthenticated } = useAuthState();
-  const enabled = args !== "skip" && (fn.startsWith("siteSettings") || isAuthenticated);
+  const enabled = args !== "skip" && (
+    fn.startsWith("siteSettings") ||
+    fn === "voucherPlans.listActivePlans" ||
+    isAuthenticated
+  );
   const query = useReactQuery<any>({
     queryKey: ["pconnect", fn, args],
     queryFn: () => request(fn, args === "skip" ? {} : args),

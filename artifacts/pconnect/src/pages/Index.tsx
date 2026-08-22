@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   ShoppingCart,
   Wallet,
@@ -18,9 +19,10 @@ import {
   Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
-import { PLACEHOLDER_PLANS, formatNaira } from "@/lib/plans.ts";
+import { formatNaira } from "@/lib/plans.ts";
 import { WHATSAPP_GROUP_URL } from "@/lib/whatsapp.ts";
 import WhatsAppIcon from "@/components/whatsapp-icon.tsx";
+import { api, useConvexAuth, useMutation, useQuery } from "@/lib/pconnect-api.ts";
 
 const BG_URL = "https://hercules-cdn.com/file_N4vw0dKasw7kaIkScQbfJFXL";
 
@@ -32,6 +34,22 @@ const STATS = [
 ];
 
 const PLAN_ICONS = [Zap, Wifi, Crown, Wifi];
+
+type HomePlan = {
+  _id: string;
+  name: string;
+  durationLabel: string;
+  price: number;
+  popular: boolean;
+  availableCount: number;
+  features?: { icon: string; text: string }[] | null;
+};
+
+type PurchaseResult = {
+  username: string;
+  password: string;
+  planName: string;
+};
 
 const BENEFITS = [
   { icon: Zap, title: "Instant Delivery", desc: "Get your voucher instantly after payment" },
@@ -68,6 +86,29 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 }
 
 export default function Index() {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useConvexAuth();
+  const plans = useQuery<HomePlan[]>(api.voucherPlans.listActivePlans, {});
+  const purchaseVoucher = useMutation(api.vouchers.purchaseVoucher);
+  const [buyingPlan, setBuyingPlan] = useState<string | null>(null);
+  const [purchaseResult, setPurchaseResult] = useState<PurchaseResult | null>(null);
+
+  const handleBuy = async (plan: HomePlan) => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+    setBuyingPlan(plan._id);
+    try {
+      const result = await purchaseVoucher({ planId: plan._id });
+      setPurchaseResult(result);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Purchase failed. Please try again.");
+    } finally {
+      setBuyingPlan(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#10051f]">
       <section className="relative flex min-h-[60vh] items-center justify-center overflow-hidden md:min-h-[80vh]">
@@ -126,10 +167,10 @@ export default function Index() {
             </Button>
           </div>
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {PLACEHOLDER_PLANS.map((plan, i) => {
+            {(plans ?? []).slice(0, 4).map((plan, i) => {
               const Icon = PLAN_ICONS[i % PLAN_ICONS.length];
               return (
-                <motion.div key={plan.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.4 }}
+                <motion.div key={plan._id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.4 }}
                   className={plan.popular ? "relative flex flex-col rounded-2xl border border-[#df20ba]/50 bg-gradient-to-br from-[#7519e9]/35 to-[#df20ba]/20 p-5 shadow-[0_0_30px_rgba(223,32,186,0.2)]" : "relative flex flex-col rounded-2xl border border-[#7519e9]/25 bg-[#23103e]/60 p-5"}>
                   {plan.popular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#7519e9] to-[#ff2549] px-4 py-1 text-xs font-bold text-white">Most Popular</div>}
                   <div className="mb-4 flex items-center justify-between">
@@ -140,9 +181,23 @@ export default function Index() {
                   </div>
                   <div className="mb-4 text-3xl font-extrabold text-white">{formatNaira(plan.price)}</div>
                   <ul className="mb-6 flex flex-1 flex-col gap-1.5">
-                    {plan.features.map((f) => (<li key={f} className="flex items-center gap-2 text-sm text-white/70"><Check size={14} className="shrink-0 text-green-400" />{f}</li>))}
+                    {(plan.features ?? []).map((feature, featureIndex) => (<li key={`${feature.text}-${featureIndex}`} className="flex items-center gap-2 text-sm text-white/70"><Check size={14} className="shrink-0 text-green-400" />{feature.text}</li>))}
                   </ul>
-                  <Button asChild className="w-full font-bold" variant={plan.popular ? "glossy" : "secondary"}><Link to="/plans">Buy Now</Link></Button>
+                  <Button
+                    className="w-full font-bold"
+                    variant={plan.popular ? "glossy" : "secondary"}
+                    disabled={buyingPlan === plan._id || plan.availableCount === 0}
+                    onClick={() => void handleBuy(plan)}
+                  >
+                    {buyingPlan === plan._id ? "Processing…" : plan.availableCount === 0 ? "Out of Stock" : isAuthenticated ? "Buy Now" : "Sign In to Buy"}
+                  </Button>
+                  {purchaseResult?.planName === plan.name && (
+                    <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-white/80">
+                      <div className="font-semibold text-emerald-300">Voucher purchased</div>
+                      <div className="mt-1 font-mono">Username: {purchaseResult.username}</div>
+                      <div className="font-mono">Password: {purchaseResult.password}</div>
+                    </div>
+                  )}
                 </motion.div>
               );
             })}
