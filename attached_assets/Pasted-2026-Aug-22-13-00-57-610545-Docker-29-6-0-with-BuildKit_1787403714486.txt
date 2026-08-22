@@ -1,0 +1,58 @@
+2026-Aug-22 13:00:57.610545
+Docker 29.6.0 with BuildKit and Buildx detected on deployment server (localhost).
+2026-Aug-22 13:00:57.630345
+Starting deployment of pcyberict/Pconnect-Hotspot-App:main to localhost.
+2026-Aug-22 13:00:58.103588
+Preparing container with helper image: ghcr.io/coollabsio/coolify-helper:1.0.14
+2026-Aug-22 13:01:01.963977
+----------------------------------------
+2026-Aug-22 13:01:01.985247
+Importing pcyberict/Pconnect-Hotspot-App:main (commit sha 388d771e714459309763c2747bc8f5b36bf42967) to /artifacts/t13t5ykrh51qrecp8ft8ns4r.
+2026-Aug-22 13:01:05.268335
+Image not found (phlpxu3s0fax62927t4sl3ir:388d771e714459309763c2747bc8f5b36bf42967). Building new image.
+2026-Aug-22 13:01:07.122937
+----------------------------------------
+2026-Aug-22 13:01:07.135895
+⚠️ Build-time environment variable warning: NODE_ENV=production
+2026-Aug-22 13:01:07.151090
+Affects: Node.js/npm/yarn/bun/pnpm
+2026-Aug-22 13:01:07.162138
+Issue: Skips devDependencies installation which are often required for building (webpack, typescript, etc.)
+2026-Aug-22 13:01:07.171099
+Recommendation: Uncheck "Available at Buildtime" or use "development" during build
+2026-Aug-22 13:01:07.181427
+2026-Aug-22 13:01:07.191213
+💡 Tips to resolve build issues:
+2026-Aug-22 13:01:07.202160
+1. Set these variables as "Runtime only" in the environment variables settings
+2026-Aug-22 13:01:07.213884
+2. Use different values for build-time (e.g., NODE_ENV=development for build)
+2026-Aug-22 13:01:07.222627
+3. Consider using multi-stage Docker builds to separate build and runtime environments
+2026-Aug-22 13:01:07.542132
+----------------------------------------
+2026-Aug-22 13:01:07.555381
+Building docker image started.
+2026-Aug-22 13:01:07.565748
+To check the current progress, click on Show Debug Logs.
+2026-Aug-22 13:01:09.204603
+========================================
+2026-Aug-22 13:01:09.230925
+Deployment failed: Command execution failed (exit code 1): docker exec t13t5ykrh51qrecp8ft8ns4r bash -c 'bash /artifacts/build.sh'
+2026-Aug-22 13:01:09.230925
+Error: #0 building with "default" instance using docker driver
+2026-Aug-22 13:01:09.230925
+2026-Aug-22 13:01:09.230925
+#1 [internal] load build definition from Dockerfile
+2026-Aug-22 13:01:09.230925
+#1 transferring dockerfile: 2B 0.0s done
+2026-Aug-22 13:01:09.230925
+#1 DONE 0.0s
+2026-Aug-22 13:01:09.230925
+ERROR: failed to build: failed to solve: failed to read dockerfile: open Dockerfile: no such file or directory
+2026-Aug-22 13:01:09.230925
+exit status 1
+2026-Aug-22 13:01:09.335421
+========================================
+2026-Aug-22 13:01:09.343716
+Deployment failed. Removing the new version of your application.
