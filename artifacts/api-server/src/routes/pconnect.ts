@@ -246,6 +246,10 @@ router.post("/admin/inventory/create", async (req, res) => {
     return res.status(400).json({ error: "Plan, username, and password are required" });
   }
   try {
+    const plan = await pool.query("SELECT id FROM pconnect_voucher_plans WHERE id=$1", [planId]);
+    if (!plan.rows[0]) {
+      return res.status(400).json({ error: "The selected plan no longer exists. Refresh and select a valid plan." });
+    }
     const result = await pool.query(`INSERT INTO pconnect_vouchers (plan_id,username,password,status,notes)
       VALUES ($1,$2,$3,'available',$4) RETURNING *`, [planId, username, password, req.body?.notes || null]);
     return res.json(result.rows[0]);

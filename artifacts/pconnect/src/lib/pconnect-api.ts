@@ -106,7 +106,10 @@ async function request(fn: Endpoint, args: Args = {}, method: "GET" | "POST" = "
     if (Array.isArray(value)) return value.map(camelize);
     if (!value || typeof value !== "object") return value;
     return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([key, item]) => [
-      key.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase()),
+      // `_id` and `_creationTime` are compatibility fields used by the
+      // migrated Pconnect screens. Keep their leading underscore intact so
+      // identifiers continue to work in edit forms and select values.
+      key.startsWith("_") ? key : key.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase()),
       camelize(item),
     ]));
   };
