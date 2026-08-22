@@ -213,9 +213,47 @@ router.get("/admin/users", async (_req, res) => {
 });
 
 router.post("/admin/users/role", async (req, res) => {
-  const result = await pool.query("UPDATE pconnect_users SET role=$1 WHERE id=$2 RETURNING *", [req.body?.role, req.body?.userId]);
+  const role = req.body?.role === "admin" ? "admin" : req.body?.role === "user" ? "user" : null;
+  if (!role || typeof req.body?.userId !== "string") {
+    return res.status(400).json({ error: "A valid user and role are required" });
+  }
+  const result = await pool.query("UPDATE pconnect_users SET role=$1 WHERE id=$2 RETURNING *", [role, req.body.userId]);
   if (!result.rows[0]) return res.status(404).json({ error: "User not found" });
   return res.json(withId(result.rows[0]));
+});
+
+router.post("/admin/users/delete", async (req, res) => {
+  const userId = req.body?.userId;
+  if (typeof userId !== "string") return res.status(400).json({ error: "A valid user is required" });
+
+  const admin = await currentUser(tokenFor(req));
+  if (admin?.id === userId) {
+    return res.status(400).json({ error: "You cannot delete your own admin account" });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const user = (await client.query("SELECT id FROM pconnect_users WHERE id=$1 FOR UPDATE", [userId])).rows[0];
+    if (!user) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Keep vouchers in inventory while removing the account and its history.
+    await client.query("UPDATE pconnect_vouchers SET sold_to_user_id=NULL WHERE sold_to_user_id=$1", [userId]);
+    await client.query("DELETE FROM pconnect_purchases WHERE user_id=$1", [userId]);
+    await client.query("DELETE FROM pconnect_wallet_transactions WHERE user_id=$1", [userId]);
+    await client.query("DELETE FROM pconnect_wallets WHERE user_id=$1", [userId]);
+    await client.query("DELETE FROM pconnect_users WHERE id=$1", [userId]);
+    await client.query("COMMIT");
+    return res.json({ deleted: true, userId });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 });
 
 router.get("/admin/inventory/counts", async (_req, res) => {
