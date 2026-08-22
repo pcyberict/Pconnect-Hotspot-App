@@ -210,7 +210,7 @@ export default function Index() {
 
       <section className="bg-[#23103e]/30 px-4 py-16">
         <div className="mx-auto max-w-7xl">
-          <h2 className="mb-2 text-center text-2xl font-bold text-white md:text-3xl">Why Choose{" "}<span className="bg-gradient-to-r from-[#7519e9] to-[#df20ba] bg-clip-text text-transparent">PCYBER CONNECT?</span></h2>
+          <h2 className="mb-2 text-center text-2xl font-bold text-white md:text-3xl">Why Choose{" "}<span className="bg-gradient-to-r from-[#7519e9] to-[#df20ba] bg-clip-text text-transparent">PRIMZY CONNECT?</span></h2>
           <p className="mb-10 text-center text-sm text-white/50">Everything you need for seamless internet connectivity</p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {BENEFITS.map(({ icon: Icon, title, desc }, i) => (
