@@ -7,6 +7,7 @@ RUN corepack enable
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY artifacts/pconnect/package.json artifacts/pconnect/package.json
+COPY artifacts/api-server/package.json artifacts/api-server/package.json
 COPY lib/api-client-react/package.json lib/api-client-react/package.json
 COPY lib/api-spec/package.json lib/api-spec/package.json
 COPY lib/api-zod/package.json lib/api-zod/package.json
@@ -19,11 +20,25 @@ COPY . .
 RUN PORT=20402 BASE_PATH=/ NODE_ENV=production \
   pnpm --filter @workspace/pconnect run build
 
-FROM nginx:1.27-alpine AS runtime
+RUN pnpm --filter @workspace/api-server run build
+
+FROM node:22-bookworm-slim AS runtime
+
+ENV NODE_ENV=production
+ENV PORT=8080
+WORKDIR /app
+
+RUN apt-get update \
+  && apt-get install --no-install-recommends -y nginx \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY nginx.pconnect.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/artifacts/pconnect/dist/public /usr/share/nginx/html
+COPY --from=build /app/artifacts/api-server/dist ./api-dist
+COPY docker-start.sh /usr/local/bin/docker-start.sh
 
-EXPOSE 80
+RUN chmod +x /usr/local/bin/docker-start.sh
 
-CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 80 8080
+
+CMD ["/usr/local/bin/docker-start.sh"]
