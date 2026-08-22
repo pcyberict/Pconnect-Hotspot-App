@@ -1,0 +1,1 @@
+- [PostgreSQL authentication](postgres-auth.md) — keep Pconnect login, roles, and password handling server-side after Convex removal.

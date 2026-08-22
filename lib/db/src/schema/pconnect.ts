@@ -23,6 +23,7 @@ export const users = pgTable("pconnect_users", {
   name: text("name"),
   email: text("email"),
   phone: text("phone"),
+  passwordHash: text("password_hash"),
   role: userRole("role").notNull().default("user"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({

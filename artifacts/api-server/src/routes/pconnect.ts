@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { pool } from "@workspace/db";
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 
 const router = Router();
 const tokenFor = (req: { headers: Record<string, string | string[] | undefined> }) =>
-  typeof req.headers["x-pconnect-token"] === "string" ? req.headers["x-pconnect-token"] : "demo-user";
+  typeof req.headers["x-pconnect-token"] === "string" ? req.headers["x-pconnect-token"] : "";
 
 async function currentUser(token: string) {
   const result = await pool.query("SELECT * FROM pconnect_users WHERE token_identifier = $1", [token]);
@@ -15,6 +15,60 @@ function withId(row: Record<string, unknown>) {
   return { ...row, _id: row.id, _creationTime: row.created_at };
 }
 
+function publicUser(row: Record<string, unknown>) {
+  const { password_hash: _passwordHash, ...safe } = row;
+  return withId(safe);
+}
+
+function passwordHash(password: string, salt = randomBytes(16).toString("hex")) {
+  return `${salt}:${scryptSync(password, salt, 64).toString("hex")}`;
+}
+
+function passwordMatches(password: string, stored: string | null | undefined) {
+  if (!stored) return false;
+  const [salt, hash] = stored.split(":");
+  if (!salt || !hash) return false;
+  const derived = scryptSync(password, salt, 64);
+  return timingSafeEqual(derived, Buffer.from(hash, "hex"));
+}
+
+router.post("/auth/register", async (req, res) => {
+  const name = String(req.body?.name ?? "").trim();
+  const email = String(req.body?.email ?? "").trim().toLowerCase();
+  const phone = String(req.body?.phone ?? "").trim();
+  const password = String(req.body?.password ?? "");
+  if (!name || !email || !password || password.length < 6) {
+    return res.status(400).json({ error: "Name, email, and a password of at least 6 characters are required" });
+  }
+  try {
+    const token = randomUUID();
+    const result = await pool.query(`INSERT INTO pconnect_users
+      (token_identifier,name,email,phone,password_hash,role)
+      VALUES ($1,$2,$3,$4,$5,'user') RETURNING *`,
+      [token, name, email, phone || null, passwordHash(password)]);
+    await pool.query("INSERT INTO pconnect_wallets (user_id,balance) VALUES ($1,0)", [result.rows[0].id]);
+    return res.status(201).json({ token, user: publicUser(result.rows[0]) });
+  } catch (error) {
+    return res.status(409).json({ error: error instanceof Error && error.message.includes("duplicate") ? "An account with this email already exists" : "Registration failed" });
+  }
+});
+
+router.post("/auth/login", async (req, res) => {
+  const email = String(req.body?.email ?? "").trim().toLowerCase();
+  const password = String(req.body?.password ?? "");
+  if (!email || !password) return res.status(400).json({ error: "Email and password are required" });
+  const result = await pool.query("SELECT * FROM pconnect_users WHERE lower(email)=lower($1) LIMIT 1", [email]);
+  const user = result.rows[0] as Record<string, unknown> | undefined;
+  // The imported demo records predate password hashes; bootstrap them once with the documented demo password.
+  const valid = user && (passwordMatches(password, user.password_hash as string | null) ||
+    (!user.password_hash && email === "demo@pconnect.local" && password === "demo1234"));
+  if (!valid) return res.status(401).json({ error: "Invalid email or password" });
+  const token = randomUUID();
+  const updated = await pool.query("UPDATE pconnect_users SET token_identifier=$1, password_hash=COALESCE(password_hash,$2) WHERE id=$3 RETURNING *",
+    [token, passwordHash(password), user.id]);
+  return res.json({ token, user: publicUser(updated.rows[0]) });
+});
+
 router.get("/plans", async (_req, res) => {
   const result = await pool.query(`
     SELECT p.*, COUNT(v.id) FILTER (WHERE v.status = 'available')::int AS "availableCount",
@@ -23,6 +77,13 @@ router.get("/plans", async (_req, res) => {
     FROM pconnect_voucher_plans p LEFT JOIN pconnect_vouchers v ON v.plan_id = p.id
     WHERE p.active = true GROUP BY p.id ORDER BY p.sort_order`);
   res.json(result.rows.map(withId));
+});
+
+router.use("/admin", async (req, res, next) => {
+  const user = await currentUser(tokenFor(req));
+  if (!user) return res.status(401).json({ error: "Authentication required" });
+  if (user.role !== "admin") return res.status(403).json({ error: "Admins only" });
+  return next();
 });
 
 router.get("/admin/plans", async (_req, res) => {
@@ -63,7 +124,7 @@ router.post("/admin/plans", async (req, res) => {
 router.get("/me", async (req, res) => {
   const user = await currentUser(tokenFor(req));
   if (!user) return res.status(404).json({ error: "User not found" });
-  return res.json(withId(user));
+  return res.json(publicUser(user));
 });
 
 router.get("/wallet", async (req, res) => {
@@ -96,7 +157,7 @@ router.post("/users/profile", async (req, res) => {
   if (!user) return res.status(404).json({ error: "User not found" });
   const result = await pool.query("UPDATE pconnect_users SET name=COALESCE($1,name), phone=COALESCE($2,phone) WHERE id=$3 RETURNING *",
     [req.body?.name, req.body?.phone, user.id]);
-  return res.json(withId(result.rows[0]));
+  return res.json(publicUser(result.rows[0]));
 });
 
 router.get("/purchases", async (req, res) => {
