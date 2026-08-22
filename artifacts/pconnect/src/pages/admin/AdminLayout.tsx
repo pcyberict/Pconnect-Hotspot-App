@@ -1,10 +1,10 @@
 import { Outlet, Link, useLocation, Navigate, useNavigate } from "react-router-dom";
-import { Authenticated, Unauthenticated, AuthLoading, useQuery } from "convex/react";
+import { Authenticated, Unauthenticated, AuthLoading, useQuery } from "@/lib/pconnect-api.ts";
 import {
   LayoutDashboard, Ticket, ShoppingCart, Users, Settings2, Menu, X, ChevronRight, Home, Cog,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { api } from "@/convex/_generated/api.js";
+import { api } from "@/lib/pconnect-api.ts";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { cn } from "@/lib/utils.ts";
 

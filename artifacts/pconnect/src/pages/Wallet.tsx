@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation, useAction } from "convex/react";
+import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation, useAction } from "@/lib/pconnect-api.ts";
 import { ConvexError } from "convex/values";
 import { toast } from "sonner";
 import {
@@ -7,7 +7,7 @@ import {
   Eye, EyeOff, Building2, CreditCard, Copy, Timer, RefreshCw, Zap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { api } from "@/convex/_generated/api.js";
+import { api } from "@/lib/pconnect-api.ts";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";

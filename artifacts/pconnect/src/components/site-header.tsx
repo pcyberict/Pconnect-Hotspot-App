@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, ShieldCheck, LogOut, Home, Ticket, Info, HeadphonesIcon } from "lucide-react";
-import { Authenticated, Unauthenticated, AuthLoading, useQuery, useConvexAuth } from "convex/react";
+import { Authenticated, Unauthenticated, AuthLoading, useQuery, useConvexAuth } from "@/lib/pconnect-api.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { SignInButton } from "@/components/ui/signin.tsx";
 import Logo from "@/components/logo.tsx";
 import { cn } from "@/lib/utils.ts";
-import { api } from "@/convex/_generated/api.js";
+import { api } from "@/lib/pconnect-api.ts";
 import { useAuth } from "@/hooks/use-auth.ts";
 
 const NAV_LINKS = [

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation } from "@/lib/pconnect-api.ts";
 import { ConvexError } from "convex/values";
 import { toast } from "sonner";
-import { api } from "@/convex/_generated/api.js";
+import { api } from "@/lib/pconnect-api.ts";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { formatNaira } from "@/lib/plans.ts";

@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation } from "convex/react";
+import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation } from "@/lib/pconnect-api.ts";
 import { ConvexError } from "convex/values";
 import { toast } from "sonner";
 import { User, Mail, Phone, Save, LogOut, ShieldCheck } from "lucide-react";
-import { api } from "@/convex/_generated/api.js";
+import { api } from "@/lib/pconnect-api.ts";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";

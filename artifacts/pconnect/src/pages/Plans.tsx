@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation } from "convex/react";
+import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation } from "@/lib/pconnect-api.ts";
 import { ConvexError } from "convex/values";
 import { toast } from "sonner";
 import { Wifi, Crown, Zap, CheckCircle2, Copy, ExternalLink, ShoppingCart } from "lucide-react";
-import { api } from "@/convex/_generated/api.js";
+import { api } from "@/lib/pconnect-api.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton.tsx";

@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation } from "@/lib/pconnect-api.ts";
 import { ConvexError } from "convex/values";
 import { toast } from "sonner";
 import {
   Plus, Pencil, Save, X, CheckCircle2, XCircle, Heart,
   Zap, Wifi, Shield, Star, Trash2, GripVertical,
 } from "lucide-react";
-import { api } from "@/convex/_generated/api.js";
+import { api } from "@/lib/pconnect-api.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { formatNaira } from "@/lib/plans.ts";

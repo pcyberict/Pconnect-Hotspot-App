@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthCallback } from "@usehercules/auth/react";
-import { useConvexAuth, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api.js";
+import { useConvexAuth, useMutation } from "@/lib/pconnect-api.ts";
+import { api } from "@/lib/pconnect-api.ts";
 import { Spinner } from "@/components/ui/spinner.tsx";
 import { Button } from "@/components/ui/button.tsx";
 

@@ -1,5 +1,5 @@
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api.js";
+import { useQuery } from "@/lib/pconnect-api.ts";
+import { api } from "@/lib/pconnect-api.ts";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { formatNaira } from "@/lib/plans.ts";
 

@@ -1,6 +1,6 @@
-import { Authenticated, Unauthenticated, AuthLoading, useQuery } from "convex/react";
+import { Authenticated, Unauthenticated, AuthLoading, useQuery } from "@/lib/pconnect-api.ts";
 import { Receipt } from "lucide-react";
-import { api } from "@/convex/_generated/api.js";
+import { api } from "@/lib/pconnect-api.ts";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import {
   Empty,

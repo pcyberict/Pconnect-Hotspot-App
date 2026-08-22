@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Authenticated, Unauthenticated } from "convex/react";
+import { Authenticated, Unauthenticated } from "@/lib/pconnect-api.ts";
 import { Home, Ticket, Wallet, History, User } from "lucide-react";
 import SiteHeader from "@/components/site-header.tsx";
 import SiteFooter from "@/components/site-footer.tsx";
