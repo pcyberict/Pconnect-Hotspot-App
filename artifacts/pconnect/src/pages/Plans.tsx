@@ -191,7 +191,9 @@ function PlansInner() {
         </Button>
       </div>
 
-      <h1 className="text-3xl font-extrabold text-white">Voucher Plans</h1>
+       <h1 className="text-3xl font-extrabold text-white">
+         Voucher <span className="bg-gradient-to-r from-[#7519e9] to-[#df20ba] bg-clip-text text-transparent">Plans</span>
+       </h1>
       <p className="mt-2 mb-8 text-sm text-white/50">Choose a plan and buy instantly from your wallet balance.</p>
 
       {plans.length === 0 ? (
