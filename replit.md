@@ -1,44 +1,50 @@
-# [Project name]
+# Primzy Connect
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Primzy Connect sells hotspot internet vouchers, manages wallet deposits, and provides an admin inventory and plan dashboard.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/pconnect run dev` — run the web app
+- `pnpm --filter @workspace/api-server run dev` — run the PostgreSQL REST API
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- `pnpm --filter @workspace/db run push` — apply the Drizzle schema to development PostgreSQL
+- Required env: `DATABASE_URL` — the provisioned PostgreSQL connection string
+- Demo session: the web app uses the `demo-user` token; the seeded demo admin has a ₦2,500 wallet balance.
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
+- pnpm workspaces, Node.js 20, TypeScript
 - API: Express 5
 - DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Frontend: React + Vite + React Router
+- API: REST compatibility layer for the existing UI flows
+- Build: Vite and esbuild
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/pconnect/src` — web pages and PostgreSQL REST compatibility client
+- `artifacts/api-server/src/routes/pconnect.ts` — Pconnect API routes and transactional voucher purchases
+- `lib/db/src/schema/pconnect.ts` — PostgreSQL source-of-truth schema for all Convex tables
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Existing page calls remain stable through a REST adapter, so the UI did not need a page-by-page rewrite.
+- Voucher purchase debits the wallet, records a transaction, and marks a voucher sold in one PostgreSQL transaction.
+- PostgreSQL IDs are UUIDs and API responses include `_id` compatibility fields for the existing screens.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Users can browse plans, fund a wallet, buy vouchers, view purchase history, and manage their profile. Admins can manage plans, voucher inventory, users, settings, and sales statistics.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+Keep the current Primzy Connect screens and visual language while replacing persistence integrations.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- The PostgreSQL schema must be applied with `pnpm --filter @workspace/db run push` before starting the API.
+- Flutterwave verification and virtual-account flows require provider credentials in site settings; wallet deposits remain pending until verified.
 
 ## Pointers
 

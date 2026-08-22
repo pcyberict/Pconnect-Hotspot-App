@@ -1,1 +1,9 @@
-export { useUser, useAuth } from "@usehercules/auth/react";
+import { useAuthState } from "@/components/providers/auth.tsx";
+
+export function useAuth() {
+  return useAuthState();
+}
+
+export function useUser() {
+  return useAuthState().user;
+}

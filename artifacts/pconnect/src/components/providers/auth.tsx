@@ -1,23 +1,27 @@
-import { HerculesAuthProvider } from "@usehercules/auth/react";
+import { createContext, useContext, useMemo, useState } from "react";
+
+type DemoUser = { profile: { name: string; email: string } };
+const AuthContext = createContext<{
+  user: DemoUser | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  signinRedirect: () => Promise<void>;
+  signout: () => Promise<void>;
+}>({ user: null, isAuthenticated: false, isLoading: false, signinRedirect: async () => {}, signout: async () => {} });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  return (
-    <HerculesAuthProvider
-      authority={import.meta.env.VITE_HERCULES_OIDC_AUTHORITY!}
-      client_id={import.meta.env.VITE_HERCULES_OIDC_CLIENT_ID!}
-      userManagerSettings={{
-        prompt: import.meta.env.VITE_HERCULES_OIDC_PROMPT ?? "select_account",
-        response_type:
-          import.meta.env.VITE_HERCULES_OIDC_RESPONSE_TYPE ?? "code",
-        scope:
-          import.meta.env.VITE_HERCULES_OIDC_SCOPE ??
-          "openid profile email offline_access",
-        redirect_uri:
-          import.meta.env.VITE_HERCULES_OIDC_REDIRECT_URI ??
-          `${window.location.origin}/auth/callback`,
-      }}
-    >
-      {children}
-    </HerculesAuthProvider>
-  );
+  const [token, setToken] = useState(() => localStorage.getItem("pconnect-token"));
+  const value = useMemo(() => {
+    const authenticated = Boolean(token);
+    return {
+      user: authenticated ? { profile: { name: "Demo Customer", email: "demo@pconnect.local" } } : null,
+      isAuthenticated: authenticated,
+      isLoading: false,
+      signinRedirect: async () => { localStorage.setItem("pconnect-token", "demo-user"); setToken("demo-user"); },
+      signout: async () => { localStorage.removeItem("pconnect-token"); setToken(null); },
+    };
+  }, [token]);
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
+
+export function useAuthState() { return useContext(AuthContext); }
