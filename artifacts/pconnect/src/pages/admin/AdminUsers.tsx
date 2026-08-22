@@ -93,7 +93,7 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      <Card className="mb-8 border-white/10 bg-white/[0.03] text-white">
+      <Card className="mb-8 border-white/10 bg-[#1a0b30]/60 text-white">
         <CardHeader className="border-b border-white/10">
           <CardTitle className="text-base">Add a new user</CardTitle>
           <CardDescription className="text-white/45">Create login credentials and choose whether this account can access admin tools.</CardDescription>
@@ -102,23 +102,23 @@ export default function AdminUsers() {
           <form onSubmit={(event) => void submitNewUser(event)} className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="new-user-name" className="text-white/70">Full name</Label>
-              <Input id="new-user-name" required value={newUser.name} onChange={(event) => setNewUser({ ...newUser, name: event.target.value })} placeholder="Jane Doe" className="border-white/10 bg-black/20 text-white placeholder:text-white/25" />
+              <Input id="new-user-name" required value={newUser.name} onChange={(event) => setNewUser({ ...newUser, name: event.target.value })} placeholder="Jane Doe" className="border-white/10 bg-[#1a0b30]/60 text-white placeholder:text-white/25" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="new-user-email" className="text-white/70">Email address</Label>
-              <Input id="new-user-email" required type="email" value={newUser.email} onChange={(event) => setNewUser({ ...newUser, email: event.target.value })} placeholder="jane@example.com" className="border-white/10 bg-black/20 text-white placeholder:text-white/25" />
+              <Input id="new-user-email" required type="email" value={newUser.email} onChange={(event) => setNewUser({ ...newUser, email: event.target.value })} placeholder="jane@example.com" className="border-white/10 bg-[#1a0b30]/60 text-white placeholder:text-white/25" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="new-user-phone" className="text-white/70">Phone <span className="text-white/35">(optional)</span></Label>
-              <Input id="new-user-phone" type="tel" value={newUser.phone} onChange={(event) => setNewUser({ ...newUser, phone: event.target.value })} placeholder="+234 ..." className="border-white/10 bg-black/20 text-white placeholder:text-white/25" />
+              <Input id="new-user-phone" type="tel" value={newUser.phone} onChange={(event) => setNewUser({ ...newUser, phone: event.target.value })} placeholder="+234 ..." className="border-white/10 bg-[#1a0b30]/60 text-white placeholder:text-white/25" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="new-user-password" className="text-white/70">Temporary password</Label>
-              <Input id="new-user-password" required minLength={6} type="password" value={newUser.password} onChange={(event) => setNewUser({ ...newUser, password: event.target.value })} placeholder="At least 6 characters" className="border-white/10 bg-black/20 text-white placeholder:text-white/25" />
+              <Input id="new-user-password" required minLength={6} type="password" value={newUser.password} onChange={(event) => setNewUser({ ...newUser, password: event.target.value })} placeholder="At least 6 characters" className="border-white/10 bg-[#1a0b30]/60 text-white placeholder:text-white/25" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="new-user-role" className="text-white/70">Role</Label>
-              <select id="new-user-role" value={newUser.role} onChange={(event) => setNewUser({ ...newUser, role: event.target.value as "admin" | "user" })} className="flex h-9 w-full rounded-md border border-white/10 bg-[#100520] px-3 py-1 text-sm text-white shadow-sm focus:outline-none focus:ring-1 focus:ring-[#7519e9]">
+              <select id="new-user-role" value={newUser.role} onChange={(event) => setNewUser({ ...newUser, role: event.target.value as "admin" | "user" })} className="flex h-9 w-full rounded-md border border-white/10 bg-[#1a0b30]/60 px-3 py-1 text-sm text-white shadow-sm focus:outline-none focus:ring-1 focus:ring-[#7519e9]">
                 <option value="user">Regular user</option>
                 <option value="admin">Administrator</option>
               </select>
