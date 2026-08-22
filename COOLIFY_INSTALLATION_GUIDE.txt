@@ -1,0 +1,296 @@
+PCONNECT / PRIMZY CONNECT
+COOLIFY VPS INSTALLATION GUIDE
+================================
+
+This guide installs the combined Pconnect web application and API on a VPS
+using Coolify and PostgreSQL.
+
+
+1. REQUIREMENTS
+---------------
+
+- A VPS with Coolify installed
+- A GitHub repository containing this project
+- A PostgreSQL database
+- A domain name pointed to the VPS (optional during initial testing)
+
+The project uses:
+
+- React + Vite web frontend
+- Express API server
+- PostgreSQL + Drizzle ORM
+- Docker multi-stage deployment
+
+
+2. CREATE THE POSTGRESQL DATABASE IN COOLIFY
+---------------------------------------------
+
+1. Open your Coolify project.
+2. Add a PostgreSQL resource.
+3. Use the default PostgreSQL image/settings unless you have a reason to
+   change them.
+4. Wait until the PostgreSQL resource is running.
+5. Copy the PostgreSQL connection string or build one using the database
+   host, port, database name, username, and password.
+
+The application must use the same DATABASE_URL that points to this database.
+
+Do not put the database password in this documentation, GitHub, or source
+code.
+
+
+3. CREATE THE APPLICATION
+-------------------------
+
+1. In Coolify, create a new Resource or Application.
+2. Select the GitHub repository.
+3. Select the branch to deploy, normally main.
+4. Choose Dockerfile as the build pack.
+5. Set the Dockerfile location to:
+
+   Dockerfile
+
+Use the root Dockerfile for the combined web + API deployment.
+Do not use Dockerfile.web or Dockerfile.api for the normal single-application
+deployment.
+
+
+4. CONFIGURE ENVIRONMENT VARIABLES
+-----------------------------------
+
+Add these variables in the application's Runtime Environment Variables.
+
+DATABASE_URL
+------------
+
+Set this to the connection string for the PostgreSQL database created in
+Coolify.
+
+SESSION_SECRET
+--------------
+
+Set a long, random value. This value must remain stable between deployments.
+Generate it on the VPS if needed, for example:
+
+  openssl rand -hex 32
+
+Never commit SESSION_SECRET to GitHub or place it in this text file.
+
+
+5. PORT AND DOMAIN SETTINGS
+----------------------------
+
+The root Dockerfile starts Nginx on port 80. Nginx serves the web frontend
+and proxies /api requests to the internal API on port 8080.
+
+In Coolify:
+
+- Container port: 80
+- Public port: 80 or the port selected by Coolify
+- Enable HTTPS after the domain is working
+
+Do not expose the internal API port publicly when using the combined root
+Dockerfile.
+
+Add your domain in the Domains section and point its DNS A record to the
+VPS IP address.
+
+
+6. DEPLOY
+---------
+
+1. Save the environment variables.
+2. Click Deploy.
+3. Wait for the Docker build to finish.
+4. Open the deployment logs.
+5. Confirm the container starts successfully.
+
+On the first startup, the API automatically:
+
+- Connects to DATABASE_URL
+- Creates the Pconnect PostgreSQL tables
+- Creates the required PostgreSQL enum types
+- Creates the database indexes
+- Inserts the demo plans, vouchers, users, and settings
+- Starts accepting web and API requests
+
+The startup log should include:
+
+  Database schema and seed data are ready
+
+The automatic setup is safe to run again after restarts. Existing records are
+not duplicated.
+
+
+7. FIRST LOGIN
+--------------
+
+Open the application domain after deployment finishes.
+
+New users can register from the application.
+
+The seeded demo records are created automatically. Change any demo credentials
+before using the application in production.
+
+
+8. MAKE A USER AN ADMIN
+-----------------------
+
+To change a user's role, open the PostgreSQL container terminal in Coolify.
+Select the PostgreSQL container in the terminal dropdown, not the Pconnect
+web or API container.
+
+Enter PostgreSQL:
+
+  psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+
+The prompt should change to:
+
+  postgres=#
+
+Run this SQL:
+
+  UPDATE pconnect_users
+  SET role = 'admin'
+  WHERE lower(email) = lower('user@example.com')
+  RETURNING id, name, email, role;
+
+To change an admin back to a regular user:
+
+  UPDATE pconnect_users
+  SET role = 'user'
+  WHERE lower(email) = lower('user@example.com')
+  RETURNING id, name, email, role;
+
+Exit PostgreSQL:
+
+  \q
+
+The user should log out and log in again after a role change.
+
+
+9. IMPORTANT: SHELL PROMPT VS DATABASE PROMPT
+----------------------------------------------
+
+This is a Linux shell prompt:
+
+  / #
+
+Do not type SQL directly there. The shell will show errors such as:
+
+  sh: SELECT: not found
+
+First run:
+
+  psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+
+Only type SQL after the prompt becomes:
+
+  postgres=#
+
+If psql is not found, the wrong container is selected. Switch the Coolify
+terminal dropdown to the PostgreSQL container.
+
+
+10. TROUBLESHOOTING
+-------------------
+
+Database schema is not initialized
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Redeploy the latest version of the project. The API now performs the schema
+bootstrap automatically before it starts.
+
+If the error remains, check:
+
+- DATABASE_URL exists in the application's Runtime Environment Variables.
+- DATABASE_URL points to the Coolify PostgreSQL database.
+- The database container is running.
+- The database user can create tables and enum types.
+- The application was rebuilt after the startup-bootstrap change.
+
+The API does not start
+~~~~~~~~~~~~~~~~~~~~~~
+
+Open the deployment logs. The API intentionally waits for PostgreSQL before
+listening. This prevents the application from appearing healthy while login
+and registration are broken.
+
+Common causes:
+
+- DATABASE_URL is missing
+- PostgreSQL is not running
+- Wrong database hostname
+- Wrong database username or password
+- The PostgreSQL user lacks permission to create tables
+
+The website loads but API requests fail
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Confirm the application was deployed with the root Dockerfile:
+
+  Dockerfile
+
+The root Dockerfile includes both Nginx and the API. Nginx proxies requests
+beginning with /api to the internal API service.
+
+Do not hardcode localhost or a VPS IP address in the frontend API settings.
+
+Login works but admin pages are unavailable
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Check the user's role:
+
+  SELECT email, role
+  FROM pconnect_users
+  WHERE lower(email) = lower('user@example.com');
+
+The role must be:
+
+  admin
+
+After changing the role, log out and log in again.
+
+
+11. UPDATING THE APPLICATION
+----------------------------
+
+1. Push source-code changes to GitHub.
+2. In Coolify, open the application.
+3. Start a new deployment.
+4. Review the deployment logs.
+5. Confirm the database-ready startup message.
+
+The database bootstrap runs on every startup and is designed to be
+idempotent. Do not delete the PostgreSQL volume when redeploying, or existing
+users, wallet balances, vouchers, and purchases may be lost.
+
+
+12. BACKUP RECOMMENDATION
+-------------------------
+
+Configure regular PostgreSQL backups in Coolify before production use.
+
+Always back up the database before:
+
+- Changing database structure
+- Moving the application to another VPS
+- Deleting or recreating the PostgreSQL resource
+- Performing major application upgrades
+
+
+13. SECURITY CHECKLIST
+----------------------
+
+- Use HTTPS for the public domain.
+- Keep DATABASE_URL private.
+- Keep SESSION_SECRET private and stable.
+- Do not commit passwords or secrets to GitHub.
+- Do not share PostgreSQL credentials in chat.
+- Keep at least one admin account available.
+- Change demo credentials before production use.
+- Restrict access to the Coolify dashboard and PostgreSQL terminal.
+- Enable PostgreSQL backups.
+
+
+END OF GUIDE

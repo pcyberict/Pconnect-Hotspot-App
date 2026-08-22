@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "1-SjKFYRsItFJSpNsN0lt"
+uri = "file://COOLIFY_INSTALLATION_GUIDE.txt"
+type = "text"
+title = "Pconnect Coolify Installation Guide"
+description = "Plain-text deployment guide for installing Pconnect on a Coolify VPS with PostgreSQL, automatic database setup, admin roles, troubleshooting, backups, and security steps."
+logical_id = "2fe6f6fb-aa3c-4662-8a1d-37c33a6bdba2"
+content_hash = "sha256:41c7484f1cb3b0b60e7904671ed907d9f2715ac9969107a2f42a23e8c692a59e"
+size = 7501
+mtime_ms = 1787414661940
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:0e31ff6b-88c3-4bc3-a6c5-c28652c68aaa/2fe6f6fb-aa3c-4662-8a1d-37c33a6bdba2/57f1613f-5698-488d-8502-7477a087fc8a"
+storage_version_token = "1787414669281394"
+content_type = "text/plain"
