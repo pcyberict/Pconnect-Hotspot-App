@@ -30,9 +30,9 @@ WORKDIR /app
 
 RUN apt-get update \
   && apt-get install --no-install-recommends -y nginx \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* /etc/nginx/conf.d/default.conf
 
-COPY nginx.pconnect.conf /etc/nginx/conf.d/default.conf
+COPY nginx.pconnect.conf /etc/nginx/conf.d/pconnect.conf
 COPY --from=build /app/artifacts/pconnect/dist/public /usr/share/nginx/html
 COPY --from=build /app/artifacts/api-server/dist ./api-dist
 COPY docker-start.sh /usr/local/bin/docker-start.sh
