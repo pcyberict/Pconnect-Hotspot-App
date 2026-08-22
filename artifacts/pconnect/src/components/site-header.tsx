@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ShieldCheck, LogOut, Home, Ticket, Info, HeadphonesIcon } from "lucide-react";
+import { Menu, X, ShieldCheck, LogOut, Home, Ticket, Info, HeadphonesIcon, UserRound } from "lucide-react";
 import { Authenticated, Unauthenticated, AuthLoading, useQuery, useConvexAuth } from "@/lib/pconnect-api.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
@@ -41,6 +41,12 @@ export default function SiteHeader() {
               {link.label}
             </Link>
           ))}
+          <Authenticated>
+            <Link to="/profile" className={cn("flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground", location.pathname === "/profile" && "text-foreground")}>
+              <UserRound size={14} />
+              Account
+            </Link>
+          </Authenticated>
         </nav>
         <div className="hidden items-center gap-3 lg:flex">
           <Authenticated>
@@ -73,6 +79,12 @@ export default function SiteHeader() {
                 {link.label}
               </Link>
             ))}
+            <Authenticated>
+              <Link to="/profile" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-white/5 hover:text-foreground">
+                <UserRound size={15} />
+                Account
+              </Link>
+            </Authenticated>
             <div className="mt-2 flex flex-col gap-2">
               <Authenticated>
                 <Button asChild variant="secondary" onClick={() => setOpen(false)}><Link to="/dashboard">Dashboard</Link></Button>
