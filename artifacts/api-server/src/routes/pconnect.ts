@@ -32,6 +32,13 @@ function passwordMatches(password: string, stored: string | null | undefined) {
   return timingSafeEqual(derived, Buffer.from(hash, "hex"));
 }
 
+function databaseErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+  return /relation .* does not exist|database .* does not exist|schema .* does not exist/i.test(message)
+    ? "Database schema is not initialized. Run the database schema setup first."
+    : "The database could not complete this request";
+}
+
 router.post("/auth/register", async (req, res) => {
   const name = String(req.body?.name ?? "").trim();
   const email = String(req.body?.email ?? "").trim().toLowerCase();
@@ -49,7 +56,10 @@ router.post("/auth/register", async (req, res) => {
     await pool.query("INSERT INTO pconnect_wallets (user_id,balance) VALUES ($1,0)", [result.rows[0].id]);
     return res.status(201).json({ token, user: publicUser(result.rows[0]) });
   } catch (error) {
-    return res.status(409).json({ error: error instanceof Error && error.message.includes("duplicate") ? "An account with this email already exists" : "Registration failed" });
+    if (error instanceof Error && error.message.includes("duplicate")) {
+      return res.status(409).json({ error: "An account with this email already exists" });
+    }
+    return res.status(503).json({ error: databaseErrorMessage(error) });
   }
 });
 
@@ -57,16 +67,20 @@ router.post("/auth/login", async (req, res) => {
   const email = String(req.body?.email ?? "").trim().toLowerCase();
   const password = String(req.body?.password ?? "");
   if (!email || !password) return res.status(400).json({ error: "Email and password are required" });
-  const result = await pool.query("SELECT * FROM pconnect_users WHERE lower(email)=lower($1) LIMIT 1", [email]);
-  const user = result.rows[0] as Record<string, unknown> | undefined;
-  // The imported demo records predate password hashes; bootstrap them once with the documented demo password.
-  const valid = user && (passwordMatches(password, user.password_hash as string | null) ||
-    (!user.password_hash && email === "demo@pconnect.local" && password === "demo1234"));
-  if (!valid) return res.status(401).json({ error: "Invalid email or password" });
-  const token = randomUUID();
-  const updated = await pool.query("UPDATE pconnect_users SET token_identifier=$1, password_hash=COALESCE(password_hash,$2) WHERE id=$3 RETURNING *",
-    [token, passwordHash(password), user.id]);
-  return res.json({ token, user: publicUser(updated.rows[0]) });
+  try {
+    const result = await pool.query("SELECT * FROM pconnect_users WHERE lower(email)=lower($1) LIMIT 1", [email]);
+    const user = result.rows[0] as Record<string, unknown> | undefined;
+    // The imported demo records predate password hashes; bootstrap them once with the documented demo password.
+    const valid = user && (passwordMatches(password, user.password_hash as string | null) ||
+      (!user.password_hash && email === "demo@pconnect.local" && password === "demo1234"));
+    if (!valid) return res.status(401).json({ error: "Invalid email or password" });
+    const token = randomUUID();
+    const updated = await pool.query("UPDATE pconnect_users SET token_identifier=$1, password_hash=COALESCE(password_hash,$2) WHERE id=$3 RETURNING *",
+      [token, passwordHash(password), user.id]);
+    return res.json({ token, user: publicUser(updated.rows[0]) });
+  } catch (error) {
+    return res.status(503).json({ error: databaseErrorMessage(error) });
+  }
 });
 
 router.get("/plans", async (_req, res) => {
