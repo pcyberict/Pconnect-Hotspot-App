@@ -1,7 +1,9 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 
-const rawPort = process.env["PORT"];
+// Coolify uses PORT for the public container port (80 in the combined image).
+// Keep the API's internal port independently configurable.
+const rawPort = process.env["API_PORT"] ?? process.env["PORT"];
 
 if (!rawPort) {
   throw new Error(

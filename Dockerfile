@@ -25,7 +25,7 @@ RUN pnpm --filter @workspace/api-server run build
 FROM node:22-bookworm-slim AS runtime
 
 ENV NODE_ENV=production
-ENV PORT=8080
+ENV API_PORT=8080
 WORKDIR /app
 
 RUN apt-get update \
