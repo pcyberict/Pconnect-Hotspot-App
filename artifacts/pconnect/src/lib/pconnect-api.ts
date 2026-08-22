@@ -140,6 +140,8 @@ export function useQuery<T = any>(fn: Endpoint, args: Args | "skip" = {}) {
     queryFn: () => request(fn, args === "skip" ? {} : args),
     enabled,
     staleTime: 15_000,
+    refetchOnWindowFocus: fn.startsWith("siteSettings"),
+    refetchInterval: fn === "siteSettings.get" ? 5_000 : false,
   });
   return query.data as T | undefined;
 }

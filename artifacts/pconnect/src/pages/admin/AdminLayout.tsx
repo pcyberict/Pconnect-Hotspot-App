@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { api } from "@/lib/pconnect-api.ts";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { cn } from "@/lib/utils.ts";
+import { useSiteName } from "@/lib/site-settings.ts";
 
 const ADMIN_NAV = [
   { label: "Overview", to: "/admin", icon: LayoutDashboard, exact: true },
@@ -41,6 +42,7 @@ function AdminGuard({ children }: { children: React.ReactNode }) {
 
 export default function AdminLayout() {
   const location = useLocation();
+  const siteName = useSiteName();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -99,7 +101,7 @@ export default function AdminLayout() {
                <header className="flex items-center justify-between border-b border-white/10 bg-[#100520]/95 px-4 py-3 shadow-lg shadow-black/10 backdrop-blur-xl md:px-8 md:py-4">
                  <div>
                    <div className="text-sm font-bold uppercase tracking-widest text-white/70">Admin Panel</div>
-                   <div className="mt-0.5 hidden text-xs text-white/35 md:block">Manage your Primzy Connect workspace</div>
+                     <div className="mt-0.5 hidden text-xs text-white/35 md:block">Manage your {siteName} workspace</div>
                  </div>
                  <button
                    type="button"

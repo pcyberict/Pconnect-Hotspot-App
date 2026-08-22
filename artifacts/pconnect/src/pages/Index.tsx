@@ -252,7 +252,7 @@ export default function Index() {
             {/* Background photo */}
             <img
               src="https://hercules-cdn.com/file_qfPEDBMPY2Zu03ym6A5vlo1C"
-              alt="Pconnect community"
+              alt={`${siteName} community`}
               className="absolute inset-0 h-full w-full object-cover object-center"
             />
             {/* Gradient overlay with glass effect */}

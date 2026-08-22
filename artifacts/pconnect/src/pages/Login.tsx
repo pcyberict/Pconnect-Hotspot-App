@@ -62,7 +62,7 @@ export default function Login() {
             <div className="flex flex-col items-center pt-8 pb-4 px-8">
               <img
                 src={LOGO_URL}
-                alt="Pconnect"
+                alt={siteName}
                 className="size-20 rounded-full object-contain mb-3 border-2 border-[#7519e9]/60 shadow-[0_0_24px_rgba(117,25,233,0.7),0_0_8px_rgba(255,255,255,0.15),0_4px_20px_rgba(0,0,0,0.6)]"
               />
               <div className="text-center">
