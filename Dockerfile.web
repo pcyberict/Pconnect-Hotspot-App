@@ -1,0 +1,29 @@
+FROM node:20-bookworm-slim AS build
+
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+WORKDIR /app
+
+RUN corepack enable
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+COPY artifacts/pconnect/package.json artifacts/pconnect/package.json
+COPY lib/api-client-react/package.json lib/api-client-react/package.json
+COPY lib/api-spec/package.json lib/api-spec/package.json
+COPY lib/api-zod/package.json lib/api-zod/package.json
+COPY lib/db/package.json lib/db/package.json
+
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+
+RUN PORT=20402 BASE_PATH=/ NODE_ENV=production \
+  pnpm --filter @workspace/pconnect run build
+
+FROM nginx:1.27-alpine AS runtime
+
+COPY nginx.pconnect.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/artifacts/pconnect/dist/public /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

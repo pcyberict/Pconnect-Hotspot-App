@@ -1,0 +1,15 @@
+.git
+.github
+.cache
+.conversation
+.local
+.replit
+.replit*
+node_modules
+**/node_modules
+dist
+**/dist
+*.log
+.env
+.env.*
+!.env.example
