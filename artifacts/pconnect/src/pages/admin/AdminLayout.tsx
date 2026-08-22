@@ -113,7 +113,7 @@ export default function AdminLayout() {
                </header>
 
                {mobileOpen && (
-                 <div className="absolute inset-x-0 top-full border-b border-white/10 bg-[#100520]/95 px-2 py-3 shadow-2xl shadow-black/30 backdrop-blur-xl md:hidden">
+                 <div className="absolute inset-x-0 top-full border-b border-white/10 bg-[#100520] px-2 py-3 shadow-2xl shadow-black/30 md:hidden">
                   {ADMIN_NAV.map(({ label, to, icon: Icon }) => (
                     <Link
                       key={to}

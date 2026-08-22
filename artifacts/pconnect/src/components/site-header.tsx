@@ -107,7 +107,7 @@ export default function SiteHeader() {
         </button>
       </div>
       {open && (
-        <div className="absolute inset-x-0 top-full border-t border-white/10 bg-[#10051f]/95 px-4 py-4 shadow-2xl shadow-black/30 backdrop-blur-xl lg:hidden">
+        <div className="absolute inset-x-0 top-full border-t border-white/10 bg-[#10051f] px-4 py-4 shadow-2xl shadow-black/30 lg:hidden">
           <nav className="flex flex-col gap-3">
             {NAV_LINKS.map((link) => (
               <Link key={link.label} to={link.to} onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-white/5 hover:text-foreground">
