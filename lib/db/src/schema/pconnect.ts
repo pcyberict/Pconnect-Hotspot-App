@@ -28,6 +28,7 @@ export const users = pgTable("pconnect_users", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   tokenIdx: uniqueIndex("pconnect_users_token_idx").on(table.tokenIdentifier),
+  emailIdx: uniqueIndex("pconnect_users_email_idx").on(table.email),
 }));
 
 export const wallets = pgTable("pconnect_wallets", {

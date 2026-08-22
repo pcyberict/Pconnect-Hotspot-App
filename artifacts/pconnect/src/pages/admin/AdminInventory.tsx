@@ -1,12 +1,12 @@
 import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@/lib/pconnect-api.ts";
-import { ConvexError } from "convex/values";
 import { Upload, Plus, Ban, RotateCcw, Trash2, CloudUpload, Search } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/pconnect-api.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
-import type { Id } from "@/convex/_generated/dataModel.d.ts";
+
+type Id<T extends string> = string;
 
 type VoucherStatus = "available" | "reserved" | "sold" | "disabled";
 
@@ -82,8 +82,7 @@ export default function AdminInventory() {
       await setStatus({ voucherId, status });
       toast.success(status === "available" ? "Voucher restored" : "Voucher disabled");
     } catch (e) {
-      const msg = e instanceof ConvexError ? (e.data as { message?: string }).message : "Failed";
-      toast.error(msg ?? "Error");
+      toast.error(e instanceof Error ? e.message : "Error");
     }
   };
 
@@ -93,8 +92,7 @@ export default function AdminInventory() {
       await deleteVoucher({ voucherId });
       toast.success("Voucher deleted");
     } catch (e) {
-      const msg = e instanceof ConvexError ? (e.data as { message?: string }).message : "Failed";
-      toast.error(msg ?? "Error");
+      toast.error(e instanceof Error ? e.message : "Error");
     } finally { setDeletingId(null); }
   };
 
@@ -108,8 +106,7 @@ export default function AdminInventory() {
       toast.success(`Imported ${result.inserted} vouchers`);
       setBulkText("");
     } catch (e) {
-      const msg = e instanceof ConvexError ? (e.data as { message?: string }).message : "Failed";
-      toast.error(msg ?? "Error");
+      toast.error(e instanceof Error ? e.message : "Error");
     } finally { setBulkLoading(false); }
   };
 
@@ -122,8 +119,7 @@ export default function AdminInventory() {
       setSingleUser(""); setSinglePass("");
       setShowSingle(false);
     } catch (e) {
-      const msg = e instanceof ConvexError ? (e.data as { message?: string }).message : "Failed";
-      toast.error(msg ?? "Error");
+      toast.error(e instanceof Error ? e.message : "Error");
     } finally { setSingleLoading(false); }
   };
 

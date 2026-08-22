@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@/lib/pconnect-api.ts";
-import { ConvexError } from "convex/values";
 import { toast } from "sonner";
 import { Save, Globe, MessageCircle, Settings2, Wifi, KeyRound, Eye, EyeOff, Pencil, CheckCircle2, XCircle } from "lucide-react";
 import { api } from "@/lib/pconnect-api.ts";
@@ -65,8 +64,7 @@ function FlutterwaveSecretField({ label, hint, dbKey, placeholder }: { label: st
       toast.success(`${label} saved`);
       setValue(""); setEditing(false); setShowValue(false);
     } catch (e) {
-      const msg = e instanceof ConvexError ? (e.data as { message?: string }).message : "Failed";
-      toast.error(msg ?? "Error");
+      toast.error(e instanceof Error ? e.message : "Error");
     } finally { setSaving(false); }
   };
 
@@ -143,8 +141,7 @@ export default function AdminSettings() {
       await setBulk({ settings: Object.entries(form).map(([key, value]) => ({ key, value })) });
       toast.success("Settings saved successfully");
     } catch (e) {
-      const msg = e instanceof ConvexError ? (e.data as { message?: string }).message : "Failed";
-      toast.error(msg ?? "Error saving settings");
+      toast.error(e instanceof Error ? e.message : "Error saving settings");
     } finally { setSaving(false); }
   };
 

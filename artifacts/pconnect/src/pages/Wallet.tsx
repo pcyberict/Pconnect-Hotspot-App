@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation, useAction } from "@/lib/pconnect-api.ts";
-import { ConvexError } from "convex/values";
 import { toast } from "sonner";
 import {
   Wallet, ArrowDownCircle, Clock, CheckCircle2, AlertCircle,
@@ -111,8 +110,7 @@ function BankTransferPanel({ amount, reference, onSuccess, onCancel }: {
         const data = await createVirtualAccount({ reference });
         if (!cancelled) setVa(data);
       } catch (e) {
-        const msg = e instanceof ConvexError ? (e.data as { message?: string }).message : "Could not generate account";
-        toast.error(msg ?? "Error");
+        toast.error(e instanceof Error ? e.message : "Could not generate account");
         if (!cancelled) onCancel();
       } finally {
         if (!cancelled) setLoading(false);
@@ -147,8 +145,7 @@ function BankTransferPanel({ amount, reference, onSuccess, onCancel }: {
         toast.error("Payment not detected yet. Please wait and try again.");
       }
     } catch (e) {
-      const msg = e instanceof ConvexError ? (e.data as { message?: string }).message : "Verification error";
-      toast.error(msg ?? "Error"); setPollStatus("notfound");
+      toast.error(e instanceof Error ? e.message : "Verification error"); setPollStatus("notfound");
     } finally { setVerifying(false); }
   };
 
@@ -253,8 +250,7 @@ function WalletInner() {
       const result = await createPending({ amount: parsedAmount });
       setBankSession({ reference: result.reference, amount: parsedAmount });
     } catch (e) {
-      const msg = e instanceof ConvexError ? (e.data as { message?: string }).message : "Failed to initiate deposit";
-      toast.error(msg ?? "Error");
+      toast.error(e instanceof Error ? e.message : "Failed to initiate deposit");
     } finally { setPreparingBank(false); }
   };
 
@@ -268,8 +264,7 @@ function WalletInner() {
       const result = await createPending({ amount: parsedAmount });
       reference = result.reference;
     } catch (e) {
-      const msg = e instanceof ConvexError ? (e.data as { message?: string }).message : "Failed";
-      toast.error(msg ?? "Error");
+      toast.error(e instanceof Error ? e.message : "Failed");
       setPreparingCard(false);
       return;
     }

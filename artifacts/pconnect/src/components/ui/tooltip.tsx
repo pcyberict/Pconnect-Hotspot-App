@@ -1,5 +1,8 @@
-import type { PropsWithChildren } from "react";
+import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
-export function TooltipProvider({ children }: PropsWithChildren) {
-  return <>{children}</>;
-}
+const TooltipProvider = TooltipPrimitive.Provider;
+const Tooltip = TooltipPrimitive.Root;
+const TooltipTrigger = TooltipPrimitive.Trigger;
+const TooltipContent = TooltipPrimitive.Content;
+
+export { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent };

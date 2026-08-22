@@ -182,7 +182,7 @@ router.get("/admin/purchases", async (_req, res) => {
 });
 
 router.get("/admin/users", async (_req, res) => {
-  const result = await pool.query(`SELECT u.*, w.balance,
+  const result = await pool.query(`SELECT u.*, w.balance AS "walletBalance",
     (SELECT COUNT(*)::int FROM pconnect_purchases p WHERE p.user_id=u.id) AS "purchaseCount"
     FROM pconnect_users u LEFT JOIN pconnect_wallets w ON w.user_id=u.id
     ORDER BY u.created_at DESC LIMIT 200`);

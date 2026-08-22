@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@/lib/pconnect-api.ts";
-import { ConvexError } from "convex/values";
 import { toast } from "sonner";
 import {
   Plus, Pencil, Save, X, CheckCircle2, XCircle, Heart,
@@ -10,7 +9,8 @@ import { api } from "@/lib/pconnect-api.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { formatNaira } from "@/lib/plans.ts";
-import type { Id } from "@/convex/_generated/dataModel.d.ts";
+
+type Id<T extends string> = string;
 
 type DurationUnit = "hours" | "days" | "months";
 
@@ -324,8 +324,7 @@ export default function AdminPlans() {
       toast.success("Plan created");
       setShowCreate(false);
     } catch (e) {
-      const msg = e instanceof ConvexError ? (e.data as { message?: string }).message : "Failed";
-      toast.error(msg ?? "Error");
+      toast.error(e instanceof Error ? e.message : "Error");
     }
   };
 
@@ -347,8 +346,7 @@ export default function AdminPlans() {
       toast.success("Plan updated");
       setEditId(null);
     } catch (e) {
-      const msg = e instanceof ConvexError ? (e.data as { message?: string }).message : "Failed";
-      toast.error(msg ?? "Error");
+      toast.error(e instanceof Error ? e.message : "Error");
     }
   };
 

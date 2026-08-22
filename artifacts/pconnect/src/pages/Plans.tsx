@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation } from "@/lib/pconnect-api.ts";
-import { ConvexError } from "convex/values";
 import { toast } from "sonner";
 import { Wifi, Crown, Zap, CheckCircle2, Copy, ExternalLink, ShoppingCart } from "lucide-react";
 import { api } from "@/lib/pconnect-api.ts";
@@ -11,7 +10,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog.tsx";
 import { formatNaira } from "@/lib/plans.ts";
-import type { Id } from "@/convex/_generated/dataModel.d.ts";
+
+type Id<T extends string> = string;
 
 type Plan = {
   _id: Id<"voucherPlans">;
@@ -158,12 +158,7 @@ function PlansInner() {
       const res = await purchaseVoucher({ planId });
       setResult(res);
     } catch (error) {
-      if (error instanceof ConvexError) {
-        const data = error.data as { message?: string };
-        toast.error(data.message ?? "Purchase failed");
-      } else {
-        toast.error("Purchase failed. Please try again.");
-      }
+      toast.error(error instanceof Error ? error.message : "Purchase failed. Please try again.");
     } finally {
       setBuying(null);
     }

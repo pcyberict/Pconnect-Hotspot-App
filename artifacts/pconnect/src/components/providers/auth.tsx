@@ -9,7 +9,15 @@ const AuthContext = createContext<{
   signout: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, phone: string, password: string) => Promise<void>;
-}>({ user: null, isAuthenticated: false, isLoading: false, signinRedirect: async () => {}, signout: async () => {} });
+}>({
+  user: null,
+  isAuthenticated: false,
+  isLoading: false,
+  signinRedirect: async () => {},
+  signout: async () => {},
+  login: async () => {},
+  register: async () => {},
+});
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<{ token: string; user: DemoUser } | null>(() => {

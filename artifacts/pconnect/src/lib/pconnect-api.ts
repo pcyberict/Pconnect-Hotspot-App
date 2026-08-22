@@ -116,18 +116,18 @@ async function request(fn: Endpoint, args: Args = {}, method: "GET" | "POST" = "
 export function useQuery<T = any>(fn: Endpoint, args: Args | "skip" = {}) {
   const { isAuthenticated } = useAuthState();
   const enabled = args !== "skip" && (fn.startsWith("siteSettings") || isAuthenticated);
-  const query = useReactQuery<T>({
+  const query = useReactQuery<any>({
     queryKey: ["pconnect", fn, args],
     queryFn: () => request(fn, args === "skip" ? {} : args),
     enabled,
     staleTime: 15_000,
   });
-  return query.data;
+  return query.data as T | undefined;
 }
 
 function useEndpointMutation(fn: Endpoint) {
   const client = useQueryClient();
-  const mutation = useReactMutation({
+  const mutation = useReactMutation<any, Error, Args>({
     mutationFn: (args: Args = {}) => request(fn, args, "POST"),
     onSuccess: () => void client.invalidateQueries({ queryKey: ["pconnect"] }),
   });

@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@/lib/pconnect-api.ts";
-import { ConvexError } from "convex/values";
 import { toast } from "sonner";
 import { api } from "@/lib/pconnect-api.ts";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { formatNaira } from "@/lib/plans.ts";
-import type { Id } from "@/convex/_generated/dataModel.d.ts";
+
+type Id<T extends string> = string;
 
 export default function AdminUsers() {
   const users = useQuery(api.vouchers.listAllUsers, {});
@@ -20,8 +20,7 @@ export default function AdminUsers() {
       await setRole({ userId, role: newRole });
       toast.success(`Role updated to ${newRole}`);
     } catch (e) {
-      const msg = e instanceof ConvexError ? (e.data as { message?: string }).message : "Failed";
-      toast.error(msg ?? "Error");
+      toast.error(e instanceof Error ? e.message : "Error");
     } finally {
       setChanging(null);
     }

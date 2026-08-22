@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation } from "@/lib/pconnect-api.ts";
-import { ConvexError } from "convex/values";
 import { toast } from "sonner";
 import { User, Mail, Phone, Save, LogOut, ShieldCheck } from "lucide-react";
 import { api } from "@/lib/pconnect-api.ts";
@@ -40,8 +39,7 @@ function ProfileInner() {
       await updateProfile({ name: name || undefined, phone: phone || undefined });
       toast.success("Profile updated!");
     } catch (e) {
-      const msg = e instanceof ConvexError ? (e.data as { message?: string }).message : "Failed";
-      toast.error(msg ?? "Error updating profile");
+      toast.error(e instanceof Error ? e.message : "Error updating profile");
     } finally { setSaving(false); }
   };
 
