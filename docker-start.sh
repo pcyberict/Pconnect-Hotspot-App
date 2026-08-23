@@ -14,9 +14,8 @@ trap cleanup INT TERM EXIT
 
 sleep 1
 if ! kill -0 "$api_pid" 2>/dev/null; then
-  echo "The API process exited during startup. Check DATABASE_URL and the database schema." >&2
-  wait "$api_pid"
-  exit 1
+  echo "WARNING: The API process exited during startup. Nginx will continue serving the frontend; check DATABASE_URL and the database schema." >&2
+  wait "$api_pid" || true
 fi
 
 nginx -g "daemon off;"
