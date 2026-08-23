@@ -73,6 +73,7 @@ const FAQS = [
   { q: "What payment methods are supported?", a: "We accept payments via Flutterwave which supports cards, bank transfers, USSD, and mobile money." },
   { q: "Can I use a voucher on multiple devices?", a: "Each voucher is tied to a single MikroTik session. Check your plan details for device and data limits." },
   { q: "What if my voucher doesn't work?", a: "Contact our support team via WhatsApp and we will resolve it promptly, usually within minutes." },
+  { q: "How does the referral programme work?", a: "Share your personal referral link with friends. When someone signs up through your link and makes their first successful deposit, you earn a referral commission in your wallet." },
 ];
 
 function FaqItem({ q, a }: { q: string; a: string }) {
