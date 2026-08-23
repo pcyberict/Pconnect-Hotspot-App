@@ -57,7 +57,7 @@ export default function AdminLayout() {
       </AuthLoading>
       <Authenticated>
         <AdminGuard>
-          <div className="flex min-h-screen bg-[#0a0316]">
+          <div className="flex min-h-screen w-full min-w-0 overflow-x-hidden bg-[#0a0316]">
             <aside className="hidden w-56 shrink-0 flex-col border-r border-white/10 bg-[#100520] md:flex">
               <div className="px-4 py-5">
                 <div className="text-sm font-bold text-white/40 uppercase tracking-widest">Admin Panel</div>
@@ -139,7 +139,7 @@ export default function AdminLayout() {
                )}
                </div>
 
-               <main className="flex-1 overflow-auto p-4 pb-24 md:p-8 md:pb-28">
+                <main className="min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto p-4 pb-24 md:p-8 md:pb-28">
                 <Outlet />
               </main>
 
