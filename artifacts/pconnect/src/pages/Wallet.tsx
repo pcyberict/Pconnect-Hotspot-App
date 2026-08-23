@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";
 import { formatNaira } from "@/lib/plans.ts";
 import { useAuth } from "@/hooks/use-auth.ts";
-import { useSiteName } from "@/lib/site-settings.ts";
+import { useSiteAsset, useSiteName } from "@/lib/site-settings.ts";
 
 const QUICK_AMOUNTS = [500, 1000, 2000, 5000];
 
@@ -230,6 +230,7 @@ function WalletInner() {
   const verifyDeposit = useAction(api.wallet.deposits.verifyDepositById);
   const { user } = useAuth();
   const siteName = useSiteName();
+  const siteLogo = useSiteAsset("site_logo", "https://hercules-cdn.com/file_PDusWTTXoxwuVrGaJFbrGp0y");
   const scriptLoaded = useFlutterwaveScript();
 
   const [amount, setAmount] = useState("");
@@ -285,7 +286,7 @@ function WalletInner() {
       amount: parsedAmount,
       currency: "NGN",
       customer: { email: user?.profile.email ?? "customer@pcyberict.com", name: user?.profile.name ?? `${siteName} Customer` },
-      customizations: { title: siteName, description: "Wallet Funding", logo: "https://hercules-cdn.com/file_PDusWTTXoxwuVrGaJFbrGp0y" },
+      customizations: { title: siteName, description: "Wallet Funding", logo: siteLogo },
       callback: (response) => {
         if (response.status === "successful") {
           toast.loading("Verifying payment…", { id: "verify" });

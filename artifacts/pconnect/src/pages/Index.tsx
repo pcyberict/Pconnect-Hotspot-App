@@ -23,9 +23,10 @@ import { formatNaira } from "@/lib/plans.ts";
 import { WHATSAPP_GROUP_URL } from "@/lib/whatsapp.ts";
 import WhatsAppIcon from "@/components/whatsapp-icon.tsx";
 import { api, useConvexAuth, useMutation, useQuery } from "@/lib/pconnect-api.ts";
-import { useSiteName } from "@/lib/site-settings.ts";
+import { useSiteAsset, useSiteName } from "@/lib/site-settings.ts";
 
-const BG_URL = "https://hercules-cdn.com/file_N4vw0dKasw7kaIkScQbfJFXL";
+const DEFAULT_HERO_URL = "https://hercules-cdn.com/file_N4vw0dKasw7kaIkScQbfJFXL";
+const DEFAULT_COMMUNITY_URL = "https://hercules-cdn.com/file_qfPEDBMPY2Zu03ym6A5vlo1C";
 
 const STATS = [
   { icon: Users, value: "25,000+", label: "Happy Users" },
@@ -90,6 +91,8 @@ export default function Index() {
   const navigate = useNavigate();
   const { isAuthenticated } = useConvexAuth();
   const siteName = useSiteName();
+  const heroUrl = useSiteAsset("hero_banner", DEFAULT_HERO_URL);
+  const communityUrl = useSiteAsset("community_banner", DEFAULT_COMMUNITY_URL);
   const plans = useQuery<HomePlan[]>(api.voucherPlans.listActivePlans, {});
   const purchaseVoucher = useMutation(api.vouchers.purchaseVoucher);
   const [buyingPlan, setBuyingPlan] = useState<string | null>(null);
@@ -114,7 +117,7 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-[#10051f]">
       <section className="relative flex min-h-[60vh] items-center justify-center overflow-hidden md:min-h-[80vh]">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${BG_URL})` }} />
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${heroUrl})` }} />
         <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(16,5,31,0.75) 0%, rgba(16,5,31,0.5) 50%, rgba(16,5,31,0.95) 100%)" }} />
         <div className="pointer-events-none absolute top-1/4 left-1/4 h-64 w-64 rounded-full bg-[#7519e9]/20 blur-3xl" />
         <div className="pointer-events-none absolute right-1/4 bottom-1/4 h-64 w-64 rounded-full bg-[#ff2549]/15 blur-3xl" />
@@ -251,7 +254,7 @@ export default function Index() {
             className="relative overflow-hidden rounded-3xl border border-[#df20ba]/30">
             {/* Background photo */}
             <img
-              src="https://hercules-cdn.com/file_qfPEDBMPY2Zu03ym6A5vlo1C"
+              src={communityUrl}
               alt={`${siteName} community`}
               className="absolute inset-0 h-full w-full object-cover object-center"
             />

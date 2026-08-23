@@ -6,15 +6,16 @@ import { useAuth } from "@/hooks/use-auth.ts";
 import SiteHeader from "@/components/site-header.tsx";
 import SiteFooter from "@/components/site-footer.tsx";
 import WhatsAppIcon from "@/components/whatsapp-icon.tsx";
-import { useSiteName } from "@/lib/site-settings.ts";
+import { useSiteAsset, useSiteName } from "@/lib/site-settings.ts";
 
-const LOGO_URL = "https://hercules-cdn.com/file_1A2LMz3Ezgh2isR7FfmjJfGQ";
+const DEFAULT_LOGIN_LOGO = "https://hercules-cdn.com/file_1A2LMz3Ezgh2isR7FfmjJfGQ";
 const BG_URL = "https://hercules-cdn.com/file_TQBDRwwJWEDIkSRlcLoUdqD1";
 const WHATSAPP_URL = "https://chat.whatsapp.com/your-group-invite";
 
 export default function Login() {
   const { login, register, isLoading } = useAuth();
   const siteName = useSiteName();
+  const loginLogo = useSiteAsset("login_logo", DEFAULT_LOGIN_LOGO);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [tab, setTab] = useState<"login" | "register">(
@@ -61,7 +62,7 @@ export default function Login() {
           <div className="rounded-2xl border border-white/15 bg-black/55 backdrop-blur-2xl shadow-[0_8px_80px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.08)] overflow-hidden">
             <div className="flex flex-col items-center pt-8 pb-4 px-8">
               <img
-                src={LOGO_URL}
+                src={loginLogo}
                 alt={siteName}
                 className="size-20 rounded-full object-contain mb-3 border-2 border-[#7519e9]/60 shadow-[0_0_24px_rgba(117,25,233,0.7),0_0_8px_rgba(255,255,255,0.15),0_4px_20px_rgba(0,0,0,0.6)]"
               />

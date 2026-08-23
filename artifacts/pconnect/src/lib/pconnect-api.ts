@@ -44,6 +44,7 @@ export const api = {
     deleteVoucher: endpoint("vouchers.deleteVoucher"),
     bulkImportVouchers: endpoint("vouchers.bulkImportVouchers"),
     createSingleVoucher: endpoint("vouchers.createSingleVoucher"),
+      manualFunding: endpoint("vouchers.manualFunding"),
   },
   siteSettings: {
     get: endpoint("siteSettings.get"),
@@ -96,6 +97,7 @@ async function request(fn: Endpoint, args: Args = {}, method: "GET" | "POST" = "
     "vouchers.deleteVoucher": "admin/inventory/delete",
     "vouchers.bulkImportVouchers": "admin/inventory/import",
     "vouchers.createSingleVoucher": "admin/inventory/create",
+    "vouchers.manualFunding": "admin/users/manual-funding",
     "siteSettings.get": "settings",
     "siteSettings.getAll": "settings",
     "siteSettings.getPublicKey": "settings/public-key",

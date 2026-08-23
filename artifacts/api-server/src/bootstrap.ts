@@ -10,6 +10,7 @@ const schemaStatements = [
     CREATE TYPE pconnect_wallet_tx_type AS ENUM ('deposit', 'purchase');
   EXCEPTION WHEN duplicate_object THEN NULL;
   END $$`,
+  `ALTER TYPE pconnect_wallet_tx_type ADD VALUE IF NOT EXISTS 'manual_funding'`,
   `DO $$ BEGIN
     CREATE TYPE pconnect_wallet_tx_status AS ENUM ('pending', 'successful', 'failed');
   EXCEPTION WHEN duplicate_object THEN NULL;

@@ -15,3 +15,8 @@ export function useSiteName() {
 
   return resolvedSiteName;
 }
+
+export function useSiteAsset(key: string, fallback: string) {
+  const value = useQuery<string | null>(api.siteSettings.get, { key });
+  return value?.trim() || fallback;
+}

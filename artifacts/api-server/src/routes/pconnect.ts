@@ -322,6 +322,43 @@ router.post("/admin/users/delete", async (req, res) => {
   }
 });
 
+router.post("/admin/users/manual-funding", async (req, res) => {
+  const userId = String(req.body?.userId ?? "");
+  const amount = Number(req.body?.amount);
+  if (!userId || !Number.isFinite(amount) || amount <= 0 || amount > 5000000) {
+    return res.status(400).json({ error: "Select a user and enter a valid amount" });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const user = (await client.query("SELECT id, name, email FROM pconnect_users WHERE id=$1", [userId])).rows[0];
+    const wallet = (await client.query("SELECT * FROM pconnect_wallets WHERE user_id=$1 FOR UPDATE", [userId])).rows[0];
+    if (!user || !wallet) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "User wallet not found" });
+    }
+    const previousBalance = Number(wallet.balance);
+    const newBalance = previousBalance + amount;
+    const reference = `pcc-manual-${randomUUID()}`;
+    await client.query(`INSERT INTO pconnect_wallet_transactions
+      (user_id,wallet_id,type,amount,previous_balance,new_balance,status,reference,provider,description)
+      VALUES ($1,$2,'manual_funding',$3,$4,$5,'successful',$6,'admin','Manual funding by admin')`,
+      [userId, wallet.id, amount, previousBalance, newBalance, reference]);
+    await client.query("UPDATE pconnect_wallets SET balance=$1 WHERE id=$2", [newBalance, wallet.id]);
+    await client.query(`INSERT INTO pconnect_notifications (user_id, title, message, type)
+      VALUES ($1, 'Wallet funded', $2, 'wallet')`,
+      [userId, `${amount.toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 })} Manual funding by admin`]);
+    await client.query("COMMIT");
+    return res.json({ userId, amount, balance: newBalance, reference });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    return res.status(400).json({ error: error instanceof Error ? error.message : "Manual funding failed" });
+  } finally {
+    client.release();
+  }
+});
+
 router.get("/admin/inventory/counts", async (_req, res) => {
   const result = await pool.query(`SELECT
     COUNT(*) FILTER (WHERE status = 'available')::int AS available,
