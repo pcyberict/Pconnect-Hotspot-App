@@ -5,8 +5,11 @@ set -eu
 
 run_api() {
   while :; do
-    API_PORT=8080 node --enable-source-maps /app/api-dist/index.mjs
-    status=$?
+    if API_PORT=8080 node --enable-source-maps /app/api-dist/index.mjs; then
+      status=0
+    else
+      status=$?
+    fi
     echo "The API stopped with exit code ${status}; retrying in 5 seconds. Check DATABASE_URL and PostgreSQL logs." >&2
     sleep 5
   done
