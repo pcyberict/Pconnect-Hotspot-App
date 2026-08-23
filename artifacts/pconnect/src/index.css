@@ -134,7 +134,14 @@
 
   body {
     @apply bg-background text-foreground;
+    min-width: 320px;
+    min-height: 100%;
     overflow-x: hidden;
+  }
+
+  html,
+  #root {
+    min-height: 100%;
   }
 
   [data-slot="skeleton"] {

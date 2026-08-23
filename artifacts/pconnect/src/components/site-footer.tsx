@@ -8,7 +8,7 @@ export default function SiteFooter() {
   const siteName = useSiteName();
 
   return (
-    <footer className="border-t border-white/10 bg-[#0c0316] px-4 py-5 md:px-8">
+    <footer className="mt-auto w-full shrink-0 border-t border-white/10 bg-[#0c0316] px-4 py-5 md:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="grid items-start gap-6 md:grid-cols-[1.35fr_repeat(3,minmax(0,1fr))] md:gap-8">
           <div className="-mt-2 flex min-w-0 flex-col items-start md:-mt-10">

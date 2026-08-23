@@ -17,12 +17,12 @@ const MOBILE_NAV_LINKS = [
 export default function AppLayout() {
   const location = useLocation();
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-[100dvh] w-full max-w-full flex-col overflow-x-clip bg-background">
       <SiteHeader />
-      <main className="flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0"><Outlet /></main>
+      <main className="min-w-0 flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0"><Outlet /></main>
       {/* Hide full footer on mobile when logged in; always show on desktop */}
       <Authenticated>
-        <div className="hidden md:block"><SiteFooter /></div>
+        <div className="hidden shrink-0 md:block"><SiteFooter /></div>
       </Authenticated>
       <Unauthenticated>
         <SiteFooter />
@@ -30,9 +30,8 @@ export default function AppLayout() {
       <WhatsAppFloatingButton />
       <Authenticated>
         <nav
-          className="fixed inset-x-0 z-40 flex min-h-[4.5rem] items-center justify-around border-t border-white/10 bg-[#10051f]/95 px-1 pb-2 pt-2 shadow-[0_-8px_24px_rgba(0,0,0,0.2)] backdrop-blur-xl md:hidden"
+          className="fixed inset-x-0 bottom-0 z-40 flex min-h-[4.5rem] items-center justify-around border-t border-white/10 bg-[#10051f]/95 px-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(0,0,0,0.2)] backdrop-blur-xl md:hidden"
           style={{
-            bottom: "env(safe-area-inset-bottom, 0px)",
             paddingBottom: "max(0.5rem, env(safe-area-inset-bottom, 0px))",
           }}
         >
