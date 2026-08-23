@@ -13,14 +13,18 @@ const DEFAULT_LOGIN_LOGO = "https://hercules-cdn.com/file_1A2LMz3Ezgh2isR7FfmjJf
 const BG_URL = "https://hercules-cdn.com/file_TQBDRwwJWEDIkSRlcLoUdqD1";
 const WHATSAPP_URL = "https://chat.whatsapp.com/your-group-invite";
 
-export default function Login() {
+type LoginProps = {
+  registrationOnly?: boolean;
+};
+
+export default function Login({ registrationOnly = false }: LoginProps) {
   const { login, register, isLoading } = useAuth();
   const siteName = useSiteName();
   const loginLogo = useSiteAsset("login_logo", DEFAULT_LOGIN_LOGO);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [tab, setTab] = useState<"login" | "register">(
-    searchParams.get("tab") === "register" ? "register" : "login"
+    registrationOnly || searchParams.get("tab") === "register" ? "register" : "login"
   );
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", password: "", referralCode: "" });
@@ -103,21 +107,23 @@ export default function Login() {
                <input inputMode="numeric" maxLength={6} value={verification.code} onChange={e => setVerification(v => v && ({ ...v, code: e.target.value.replace(/\D/g, "") }))} placeholder="000000" className="mt-5 w-full rounded-xl border border-white/15 bg-black/40 px-4 py-3 text-center text-2xl tracking-[0.5em] text-white outline-none focus:border-[#7519e9]" />
                <button onClick={() => void verifyRegistration()} disabled={submitting || verification.code.length !== 6} className="mt-4 w-full rounded-xl bg-gradient-to-r from-[#7519e9] to-[#df20ba] py-3 text-sm font-bold text-white disabled:opacity-60">{submitting ? "Verifying…" : "Verify email"}</button>
              </div> : <>
-             <div className="mx-5 mb-5 flex overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm sm:mx-8">
-              {(["login", "register"] as const).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTab(t)}
-                  className={`flex-1 py-2.5 text-sm font-semibold tracking-wide transition-all cursor-pointer ${
-                    tab === t
-                      ? "bg-gradient-to-r from-[#7519e9] to-[#df20ba] text-white"
-                      : "text-white/40 hover:text-white/70"
-                  }`}
-                >
-                  {t === "login" ? "Login" : "Register"}
-                </button>
-              ))}
-            </div>
+             {!registrationOnly && (
+               <div className="mx-5 mb-5 flex overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm sm:mx-8">
+                 {(["login", "register"] as const).map((t) => (
+                   <button
+                     key={t}
+                     onClick={() => setTab(t)}
+                     className={`flex-1 py-2.5 text-sm font-semibold tracking-wide transition-all cursor-pointer ${
+                       tab === t
+                         ? "bg-gradient-to-r from-[#7519e9] to-[#df20ba] text-white"
+                         : "text-white/40 hover:text-white/70"
+                     }`}
+                   >
+                     {t === "login" ? "Login" : "Register"}
+                   </button>
+                 ))}
+               </div>
+             )}
 
             <div className="px-5 pb-8 sm:px-8">
               <AnimatePresence mode="wait">

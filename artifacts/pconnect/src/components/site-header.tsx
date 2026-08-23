@@ -91,7 +91,7 @@ export default function SiteHeader() {
           </Authenticated>
           <Unauthenticated>
             <Button asChild variant="secondary"><Link to="/login">Login</Link></Button>
-            <Button asChild variant="glossy"><Link to="/login?tab=register#register">Register</Link></Button>
+            <Button asChild variant="glossy"><Link to="/register">Register</Link></Button>
           </Unauthenticated>
           <AuthLoading><Skeleton className="h-9 w-24" /></AuthLoading>
         </div>
@@ -162,7 +162,7 @@ export default function SiteHeader() {
               </Authenticated>
               <Unauthenticated>
                 <Button asChild variant="secondary" onClick={() => setOpen(false)}><Link to="/login">Login</Link></Button>
-                <Button asChild variant="glossy" onClick={() => setOpen(false)}><Link to="/login?tab=register#register">Register</Link></Button>
+                <Button asChild variant="glossy" onClick={() => setOpen(false)}><Link to="/register">Register</Link></Button>
               </Unauthenticated>
             </div>
           </nav>
