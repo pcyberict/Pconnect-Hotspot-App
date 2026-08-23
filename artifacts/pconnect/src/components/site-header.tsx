@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ShieldCheck, LogOut, Home, Ticket, Info, HeadphonesIcon, UserRound, Bell, Gift } from "lucide-react";
+import { Menu, X, ShieldCheck, LogOut, Home, Ticket, UserRound, Bell, Gift } from "lucide-react";
 import { Authenticated, Unauthenticated, AuthLoading, useQuery, useConvexAuth } from "@/lib/pconnect-api.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
@@ -14,8 +14,6 @@ import { getRegistrationUrl } from "@/lib/auth-redirect.ts";
 const NAV_LINKS = [
   { label: "Home", to: "/", icon: Home },
   { label: "Buy Vouchers", to: "/plans", icon: Ticket },
-  { label: "How It Works", to: "/how-it-works", icon: Info },
-  { label: "Support", to: "/support", icon: HeadphonesIcon },
 ];
 
 export default function SiteHeader() {
