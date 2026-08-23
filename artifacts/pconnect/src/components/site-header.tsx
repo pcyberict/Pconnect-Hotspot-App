@@ -95,7 +95,7 @@ export default function SiteHeader() {
           </Unauthenticated>
           <AuthLoading><Skeleton className="h-9 w-24" /></AuthLoading>
         </div>
-        <div className="ml-auto flex items-center gap-2 lg:hidden">
+        <div className="ml-auto flex items-center gap-3 lg:hidden">
           <Authenticated>
             <Link
               to="/notifications"
@@ -116,10 +116,10 @@ export default function SiteHeader() {
             type="button"
             aria-label="Toggle menu"
             aria-expanded={open}
-            className="cursor-pointer rounded-lg p-2 text-white/70 transition-colors hover:bg-white/5 hover:text-white"
+             className="min-h-11 min-w-11 cursor-pointer touch-manipulation rounded-lg p-2.5 text-white/70 transition-colors hover:bg-white/5 hover:text-white"
             onClick={() => setOpen((v) => !v)}
           >
-            {open ? <X className="size-5" /> : <Menu className="size-5" />}
+             {open ? <X className="size-6" /> : <Menu className="size-6" />}
           </button>
         </div>
       </div>
