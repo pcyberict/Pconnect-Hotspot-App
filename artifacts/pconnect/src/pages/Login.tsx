@@ -31,6 +31,9 @@ export default function Login({ registrationOnly = false }: LoginProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [verification, setVerification] = useState<{ email: string; code: string } | null>(null);
+  const titleWords = siteName.trim().split(/\s+/);
+  const firstTitleWord = titleWords[0] ?? siteName;
+  const remainingTitle = titleWords.slice(1).join(" ");
   useEffect(() => {
     const referral = searchParams.get("ref")?.trim().toUpperCase();
     if (referral) setForm((current) => ({ ...current, referralCode: referral }));
@@ -93,7 +96,10 @@ export default function Login({ registrationOnly = false }: LoginProps) {
                 className="size-20 rounded-full object-contain mb-3 border-2 border-[#7519e9]/60 shadow-[0_0_24px_rgba(117,25,233,0.7),0_0_8px_rgba(255,255,255,0.15),0_4px_20px_rgba(0,0,0,0.6)]"
               />
               <div className="text-center">
-                <h1 className="text-xl font-bold tracking-widest text-white">{siteName}</h1>
+                 <h1 className="text-xl font-bold tracking-widest text-white">
+                   <span className="bg-gradient-to-r from-[#df20ba] to-[#ff2549] bg-clip-text text-transparent">{firstTitleWord}</span>
+                   {remainingTitle ? ` ${remainingTitle}` : null}
+                 </h1>
                 <p className="text-white/50 text-xs mt-1">
                   Please log on to use the internet hotspot service
                 </p>
