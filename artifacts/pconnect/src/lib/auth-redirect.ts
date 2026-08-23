@@ -1,5 +1,5 @@
 export function getRegistrationUrl(destination: string) {
-  return `/login?tab=register&redirect=${encodeURIComponent(destination)}#register`;
+  return `/register?redirect=${encodeURIComponent(destination)}`;
 }
 
 export function getPostAuthDestination(redirect: string | null) {

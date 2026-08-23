@@ -14,7 +14,7 @@ type ReferralData = { referralCode?: string; creditedTotal: number; referrals: {
 function ReferralInner() {
   const data = useQuery<ReferralData>(api.referrals.getMine, {});
   const location = useLocation();
-  const link = useMemo(() => data?.referralCode ? `${window.location.origin}/login?tab=register&ref=${encodeURIComponent(data.referralCode)}#register` : "", [data?.referralCode]);
+  const link = useMemo(() => data?.referralCode ? `${window.location.origin}/register?ref=${encodeURIComponent(data.referralCode)}` : "", [data?.referralCode]);
   if (!data) return <div className="mx-auto max-w-3xl px-4 py-10"><Skeleton className="h-9 w-48" /><Skeleton className="mt-8 h-72 w-full rounded-3xl" /></div>;
   const copy = async (value: string, label: string) => { await navigator.clipboard.writeText(value); toast.success(`${label} copied`); };
   return <div className="mx-auto max-w-3xl px-4 py-10 md:px-8">

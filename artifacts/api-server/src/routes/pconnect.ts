@@ -38,7 +38,7 @@ function hashValue(value: string) {
 }
 
 function createReferralCode() {
-  return `PCYBER-${randomBytes(4).toString("hex").toUpperCase()}`;
+  return `p${randomInt(10000, 100000)}`;
 }
 
 async function creditReferralCommission(
@@ -109,7 +109,7 @@ router.post("/auth/register", async (req, res) => {
     const existing = await pool.query("SELECT id FROM pconnect_users WHERE lower(email)=lower($1) LIMIT 1", [email]);
     if (existing.rows[0]) return res.status(409).json({ error: "An account with this email already exists" });
     if (submittedReferralCode) {
-      const referrer = await pool.query("SELECT id FROM pconnect_users WHERE referral_code=$1", [submittedReferralCode]);
+      const referrer = await pool.query("SELECT id FROM pconnect_users WHERE lower(referral_code)=lower($1)", [submittedReferralCode]);
       if (!referrer.rows[0]) return res.status(400).json({ error: "That referral code is not valid" });
     }
     const code = otpCode();
@@ -141,7 +141,7 @@ router.post("/auth/register/verify", async (req, res) => {
     try {
       await client.query("BEGIN");
       const referrer = pending.referral_code
-        ? (await client.query("SELECT id FROM pconnect_users WHERE referral_code=$1", [pending.referral_code])).rows[0]
+        ? (await client.query("SELECT id FROM pconnect_users WHERE lower(referral_code)=lower($1)", [pending.referral_code])).rows[0]
         : null;
       const result = await client.query(`INSERT INTO pconnect_users
         (token_identifier,name,email,phone,password_hash,role,email_verified,referral_code,referred_by_user_id)
