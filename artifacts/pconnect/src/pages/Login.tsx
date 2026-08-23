@@ -142,10 +142,6 @@ export default function Login() {
                         {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                       </button>
                     </div>
-                     <div className="flex items-center gap-3 rounded-xl border border-white/15 bg-black/40 px-4 py-3 focus-within:border-[#7519e9]/80 transition-all">
-                       <Gift size={16} className="text-white/40 shrink-0" />
-                       <input type="text" value={form.referralCode} onChange={setField("referralCode")} placeholder="Referral code (optional)" autoComplete="off" className="flex-1 bg-transparent text-sm uppercase text-white placeholder-white/30 outline-none" />
-                     </div>
                     <button onClick={() => void submit()} disabled={isLoading || submitting} className="w-full rounded-xl bg-gradient-to-r from-[#7519e9] to-[#df20ba] py-3 text-sm font-bold text-white shadow-[0_0_24px_rgba(117,25,233,0.4)] hover:opacity-90 transition-opacity disabled:opacity-60 cursor-pointer mt-1">
                       {submitting ? (<span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" /> Signing in…</span>) : "Login"}
                     </button>
@@ -180,6 +176,10 @@ export default function Login() {
                       <Phone size={16} className="text-white/40 shrink-0" />
                       <input type="tel" value={form.phone} onChange={setField("phone")} placeholder="Phone Number" autoComplete="tel" className="flex-1 bg-transparent text-sm text-white placeholder-white/30 outline-none" />
                     </div>
+                     <div className="flex items-center gap-3 rounded-xl border border-white/15 bg-black/40 px-4 py-3 focus-within:border-[#7519e9]/80 transition-all">
+                       <Gift size={16} className="text-white/40 shrink-0" />
+                       <input type="text" value={form.referralCode} onChange={setField("referralCode")} placeholder="Referral code (optional)" autoComplete="off" className="flex-1 bg-transparent text-sm uppercase text-white placeholder-white/30 outline-none" />
+                     </div>
                     <div className="flex items-center gap-3 rounded-xl border border-white/15 bg-black/40 px-4 py-3 focus-within:border-[#7519e9]/80 transition-all">
                       <Lock size={16} className="text-white/40 shrink-0" />
                       <input type={showPassword ? "text" : "password"} value={form.password} onChange={setField("password")} placeholder="Password (6+ characters)" autoComplete="new-password" className="flex-1 bg-transparent text-sm text-white placeholder-white/30 outline-none" />
