@@ -278,11 +278,9 @@ export default function Index() {
                 whileTap={{ scale: 0.97 }}
                 animate={{ boxShadow: ["0 0 0px rgba(37,211,102,0)", "0 0 22px rgba(37,211,102,0.7)", "0 0 0px rgba(37,211,102,0)"] }}
                 transition={{ boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" } }}
-                className="inline-flex items-center gap-2.5 rounded-xl bg-[#25d366] px-5 py-2.5 text-sm font-bold text-white shadow-lg hover:bg-[#22c55e] cursor-pointer"
+                 className="inline-flex items-center gap-2 rounded-lg bg-[#25d366] px-4 py-2 text-xs font-bold text-white shadow-lg hover:bg-[#22c55e] cursor-pointer"
               >
-                <span className="flex size-8 items-center justify-center rounded-full bg-white/20 shrink-0">
-                  <WhatsAppIcon className="size-6 text-white" />
-                </span>
+                 <img src="/whatsapp-logo.svg" alt="" className="size-5 shrink-0 rounded-full" />
                 Join WhatsApp Group
               </motion.a>
             </div>
