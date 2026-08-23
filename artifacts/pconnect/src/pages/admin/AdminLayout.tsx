@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation, Navigate, useNavigate } from "react-router-dom";
 import { Authenticated, Unauthenticated, AuthLoading, useQuery } from "@/lib/pconnect-api.ts";
 import {
-  LayoutDashboard, Ticket, ShoppingCart, Users, Settings2, Menu, X, ChevronRight, Home, Cog,
+  LayoutDashboard, Ticket, ShoppingCart, Users, Settings2, Menu, X, ChevronRight, Home, Cog, Gift,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/pconnect-api.ts";
@@ -15,6 +15,7 @@ const ADMIN_NAV = [
   { label: "Inventory", to: "/admin/inventory", icon: Ticket },
   { label: "Purchases", to: "/admin/purchases", icon: ShoppingCart },
   { label: "Users", to: "/admin/users", icon: Users },
+  { label: "Bonus", to: "/admin/bonus", icon: Gift },
   { label: "Settings", to: "/admin/settings", icon: Settings2 },
 ];
 
@@ -147,8 +148,8 @@ export default function AdminLayout() {
                  aria-label="Admin quick navigation"
                  className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#100520]/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_32px_rgba(0,0,0,0.2)] backdrop-blur-xl md:px-8"
                >
-                 <div className="mx-auto grid max-w-3xl grid-cols-4 gap-1">
-                   {ADMIN_NAV.filter(({ to }) => ["/admin/plans", "/admin/inventory", "/admin/purchases", "/admin/users"].includes(to)).map(({ label, to, icon: Icon }) => {
+                  <div className="mx-auto grid max-w-3xl grid-cols-5 gap-1">
+                    {ADMIN_NAV.filter(({ to }) => ["/admin/plans", "/admin/inventory", "/admin/purchases", "/admin/users", "/admin/bonus"].includes(to)).map(({ label, to, icon: Icon }) => {
                      const isActive = location.pathname.startsWith(to);
                      return (
                        <Link

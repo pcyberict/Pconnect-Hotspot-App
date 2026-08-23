@@ -11,6 +11,7 @@ const schemaStatements = [
   EXCEPTION WHEN duplicate_object THEN NULL;
   END $$`,
   `ALTER TYPE pconnect_wallet_tx_type ADD VALUE IF NOT EXISTS 'manual_funding'`,
+  `ALTER TYPE pconnect_wallet_tx_type ADD VALUE IF NOT EXISTS 'welcome_bonus'`,
   `DO $$ BEGIN
     CREATE TYPE pconnect_wallet_tx_status AS ENUM ('pending', 'successful', 'failed');
   EXCEPTION WHEN duplicate_object THEN NULL;

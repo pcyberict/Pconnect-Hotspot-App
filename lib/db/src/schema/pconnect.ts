@@ -12,7 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const userRole = pgEnum("pconnect_user_role", ["user", "admin"]);
-export const walletTransactionType = pgEnum("pconnect_wallet_tx_type", ["deposit", "purchase", "manual_funding"]);
+export const walletTransactionType = pgEnum("pconnect_wallet_tx_type", ["deposit", "purchase", "manual_funding", "welcome_bonus"]);
 export const walletTransactionStatus = pgEnum("pconnect_wallet_tx_status", ["pending", "successful", "failed"]);
 export const voucherStatus = pgEnum("pconnect_voucher_status", ["available", "reserved", "sold", "disabled"]);
 export const purchaseStatus = pgEnum("pconnect_purchase_status", ["completed", "refunded"]);

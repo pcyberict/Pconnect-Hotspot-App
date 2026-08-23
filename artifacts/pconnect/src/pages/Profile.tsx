@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation } from "@/lib/pconnect-api.ts";
 import { toast } from "sonner";
-import { User, Mail, Phone, Save, LogOut, ShieldCheck, LockKeyhole, Eye, EyeOff } from "lucide-react";
+import { User, Mail, Phone, Save, LogOut, ShieldCheck, LockKeyhole, Eye, EyeOff, Gift } from "lucide-react";
 import { api } from "@/lib/pconnect-api.ts";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -11,6 +11,7 @@ import { getRegistrationUrl } from "@/lib/auth-redirect.ts";
 
 function ProfileInner() {
   const me = useQuery(api.users.getCurrentUser, {});
+  const wallet = useQuery<{ balance: number } | null>(api.wallets.getMyWallet, {});
   const updateProfile = useMutation(api.users.updateMyProfile);
   const changePassword = useMutation(api.users.changePassword);
   const { signout } = useAuth();
@@ -95,6 +96,14 @@ function ProfileInner() {
               </div>
             )}
           </div>
+        </div>
+      </div>
+      <div className="mb-5 flex items-center gap-4 rounded-3xl border border-[#df20ba]/25 bg-[#df20ba]/10 p-5">
+        <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#df20ba]/20 text-pink-200"><Gift size={20} /></div>
+        <div className="min-w-0">
+          <div className="text-sm font-semibold text-white">Wallet balance</div>
+          <div className="mt-1 text-2xl font-extrabold text-pink-200">₦{Number(wallet?.balance ?? 0).toLocaleString("en-NG")}</div>
+          <p className="mt-1 text-xs text-white/45">Your welcome bonus and wallet funds are ready for voucher purchases.</p>
         </div>
       </div>
       <div className="relative overflow-hidden rounded-3xl border border-[#7519e9]/20 bg-gradient-to-br from-[#1a0b30]/90 via-[#150925]/90 to-[#0e0620]/90 shadow-[0_0_40px_rgba(117,25,233,0.06)]">

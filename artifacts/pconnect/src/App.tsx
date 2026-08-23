@@ -8,6 +8,7 @@ import AdminInventory from "./pages/admin/AdminInventory.tsx";
 import AdminPurchases from "./pages/admin/AdminPurchases.tsx";
 import AdminUsers from "./pages/admin/AdminUsers.tsx";
 import AdminSettings from "./pages/admin/AdminSettings.tsx";
+import AdminBonus from "./pages/admin/AdminBonus.tsx";
 import AuthCallback from "./pages/auth/Callback.tsx";
 import AdminLogin from "./pages/admin/AdminLogin.tsx";
 import Index from "./pages/Index.tsx";
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="purchases" element={<AdminPurchases />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="bonus" element={<AdminBonus />} />
           </Route>
           <Route element={<AppLayout />}>
             <Route path="/" element={<Index />} />

@@ -91,9 +91,37 @@ router.post("/auth/register/verify", async (req, res) => {
         (token_identifier,name,email,phone,password_hash,role,email_verified)
         VALUES ($1,$2,$3,$4,$5,'user',true) RETURNING *`,
         [token, pending.name, pending.email, pending.phone, pending.password_hash]);
-      await client.query("INSERT INTO pconnect_wallets (user_id,balance) VALUES ($1,0)", [result.rows[0].id]);
+      const bonusSettings = (await client.query(
+        "SELECT key, value FROM pconnect_site_settings WHERE key = ANY($1::text[])",
+        [["welcome_bonus_active", "welcome_bonus_amount"]],
+      )).rows as { key: string; value: string }[];
+      const bonusValues = Object.fromEntries(bonusSettings.map((setting) => [setting.key, setting.value]));
+      const welcomeBonus = bonusValues.welcome_bonus_active === "true"
+        ? Math.max(0, Number(bonusValues.welcome_bonus_amount ?? 0))
+        : 0;
+      const wallet = (await client.query(
+        "INSERT INTO pconnect_wallets (user_id,balance) VALUES ($1,$2) RETURNING *",
+        [result.rows[0].id, welcomeBonus],
+      )).rows[0];
+      if (welcomeBonus > 0) {
+        const reference = `pcc-bonus-${randomUUID()}`;
+        await client.query(`INSERT INTO pconnect_wallet_transactions
+          (user_id,wallet_id,type,amount,previous_balance,new_balance,status,reference,description)
+          VALUES ($1,$2,'welcome_bonus',$3,0,$3,'successful',$4,$5)`,
+          [result.rows[0].id, wallet.id, welcomeBonus, reference, "Welcome bonus for new account"]);
+        await client.query(`INSERT INTO pconnect_notifications (user_id,title,message,type)
+          VALUES ($1,$2,$3,'success')`,
+          [result.rows[0].id, "Welcome bonus credited!", `Congratulations! ₦${welcomeBonus.toLocaleString("en-NG")} welcome bonus has been added to your wallet. You can use it to purchase a Pconnect internet access voucher.`]);
+      }
       await client.query("DELETE FROM pconnect_email_verification_tokens WHERE email=$1", [email]);
       await client.query("COMMIT");
+      if (welcomeBonus > 0) {
+        try {
+          await sendEmail(email, "Your Pconnect welcome bonus", emailLayout("Welcome to Pconnect!", `<p>Congratulations! You just received a welcome bonus of <strong>₦${welcomeBonus.toLocaleString("en-NG")}</strong>.</p><p>Use it to purchase your Pconnect internet access voucher. Enjoy! ♡</p>`));
+        } catch (emailError) {
+          console.error("Welcome bonus email could not be sent", emailError);
+        }
+      }
       return res.status(201).json({ token, user: publicUser(result.rows[0]) });
     } catch (error) {
       await client.query("ROLLBACK");
