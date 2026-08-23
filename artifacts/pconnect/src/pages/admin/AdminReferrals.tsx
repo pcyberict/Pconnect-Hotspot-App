@@ -33,9 +33,15 @@ export default function AdminReferrals() {
 
   useEffect(() => {
     if (!data) return;
-    setActive(data.settings.referral_active !== "false");
-    setType(data.settings.referral_commission_type === "percentage" ? "percentage" : "flat");
-    setValue(data.settings.referral_commission_value || "0");
+    // The shared API client camel-cases response keys, including setting keys.
+    // Support the raw names too so this stays compatible with direct API data.
+    const settings = data.settings as Record<string, string | undefined>;
+    const activeSetting = settings.referralActive ?? settings.referral_active;
+    const typeSetting = settings.referralCommissionType ?? settings.referral_commission_type;
+    const valueSetting = settings.referralCommissionValue ?? settings.referral_commission_value;
+    setActive(activeSetting !== "false");
+    setType(typeSetting === "percentage" ? "percentage" : "flat");
+    setValue(valueSetting ?? "0");
   }, [data]);
 
   const save = async () => {
