@@ -9,6 +9,7 @@ import Logo from "@/components/logo.tsx";
 import { cn } from "@/lib/utils.ts";
 import { api } from "@/lib/pconnect-api.ts";
 import { useAuth } from "@/hooks/use-auth.ts";
+import { getRegistrationUrl } from "@/lib/auth-redirect.ts";
 
 const NAV_LINKS = [
   { label: "Home", to: "/", icon: Home },
@@ -27,6 +28,7 @@ export default function SiteHeader() {
   const isAdmin = me?.role === "admin";
   const unreadCount = notifications?.unreadCount ?? 0;
   const hasNotifications = (notifications?.items.length ?? 0) > 0;
+  const accountUrl = isAuthenticated ? "/profile" : getRegistrationUrl("/profile");
 
   const handleSignOut = () => {
     void signout();
@@ -52,6 +54,12 @@ export default function SiteHeader() {
               Account
             </Link>
           </Authenticated>
+          <Unauthenticated>
+            <Link to={accountUrl} className={cn("flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground", location.pathname === "/profile" && "text-foreground")}>
+              <UserRound size={14} />
+              Account
+            </Link>
+          </Unauthenticated>
         </nav>
         <div className="hidden items-center gap-3 lg:flex">
           <Authenticated>
@@ -128,6 +136,12 @@ export default function SiteHeader() {
                 Account
               </Link>
             </Authenticated>
+            <Unauthenticated>
+              <Link to={accountUrl} onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-white/5 hover:text-foreground">
+                <UserRound size={15} />
+                Account
+              </Link>
+            </Unauthenticated>
             <div className="mt-2 flex flex-col gap-2">
               <Authenticated>
                 <Button asChild variant="secondary" onClick={() => setOpen(false)}><Link to="/dashboard">Dashboard</Link></Button>

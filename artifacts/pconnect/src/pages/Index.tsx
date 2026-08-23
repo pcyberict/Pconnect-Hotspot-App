@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -24,6 +24,7 @@ import { WHATSAPP_GROUP_URL } from "@/lib/whatsapp.ts";
 import WhatsAppIcon from "@/components/whatsapp-icon.tsx";
 import { api, useConvexAuth, useMutation, useQuery } from "@/lib/pconnect-api.ts";
 import { useSiteAsset, useSiteName } from "@/lib/site-settings.ts";
+import { getRegistrationUrl } from "@/lib/auth-redirect.ts";
 
 const DEFAULT_HERO_URL = "https://hercules-cdn.com/file_N4vw0dKasw7kaIkScQbfJFXL";
 const DEFAULT_COMMUNITY_URL = "https://hercules-cdn.com/file_qfPEDBMPY2Zu03ym6A5vlo1C";
@@ -97,10 +98,12 @@ export default function Index() {
   const purchaseVoucher = useMutation(api.vouchers.purchaseVoucher);
   const [buyingPlan, setBuyingPlan] = useState<string | null>(null);
   const [purchaseResult, setPurchaseResult] = useState<PurchaseResult | null>(null);
+  const buyVouchersUrl = isAuthenticated ? "/plans" : getRegistrationUrl("/plans");
+  const fundWalletUrl = isAuthenticated ? "/wallet" : getRegistrationUrl("/wallet");
 
   const handleBuy = async (plan: HomePlan) => {
     if (!isAuthenticated) {
-      navigate("/login");
+      navigate(getRegistrationUrl("/plans"));
       return;
     }
     setBuyingPlan(plan._id);
@@ -133,10 +136,10 @@ export default function Index() {
             </p>
             <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row md:justify-start">
               <Button asChild size="lg" variant="glossy" className="w-full text-base font-bold sm:w-auto">
-                <Link to="/plans"><ShoppingCart size={18} /> Buy Vouchers Now</Link>
+                <Link to={buyVouchersUrl}><ShoppingCart size={18} /> Buy Vouchers Now</Link>
               </Button>
               <Button asChild size="lg" variant="ghost" className="w-full border border-white/20 text-base font-semibold text-white hover:bg-white/5 sm:w-auto">
-                <Link to="/wallet"><Wallet size={18} /> Fund Wallet</Link>
+                <Link to={fundWalletUrl}><Wallet size={18} /> Fund Wallet</Link>
               </Button>
             </div>
             <a href={WHATSAPP_GROUP_URL} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex cursor-pointer items-center gap-2 text-sm text-white/80 transition-colors hover:text-white">

@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { Authenticated, Unauthenticated, AuthLoading } from "@/lib/pconnect-api.ts";
 import { useQuery } from "@/lib/pconnect-api.ts";
 import { Wallet, Ticket, Receipt, MessageCircle, ArrowRight } from "lucide-react";
@@ -93,15 +93,7 @@ export default function Dashboard() {
         <DashboardInner />
       </Authenticated>
       <Unauthenticated>
-        <div className="flex min-h-[70vh] flex-col items-center justify-center gap-4 px-4 text-center">
-          <h1 className="text-2xl font-bold">Sign in to view your dashboard</h1>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            You need an account to see your wallet balance and vouchers.
-          </p>
-          <Button asChild variant="glossy">
-             <Link to={registrationUrl}>Create an Account</Link>
-          </Button>
-        </div>
+        <Navigate to={registrationUrl} replace />
       </Unauthenticated>
       <AuthLoading>
         <div className="mx-auto max-w-5xl px-4 py-10 md:px-8">

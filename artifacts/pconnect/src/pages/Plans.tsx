@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Wifi, Crown, Zap, CheckCircle2, Copy, ExternalLink, ShoppingCart } from "lucide-react";
 import { api } from "@/lib/pconnect-api.ts";
 import { Button } from "@/components/ui/button.tsx";
-import { Link, useLocation } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -283,11 +283,7 @@ export default function PlansPage() {
     <>
       <Authenticated><PlansInner /></Authenticated>
       <Unauthenticated>
-        <div className="flex min-h-[70vh] flex-col items-center justify-center gap-4 px-4 text-center">
-          <h1 className="text-2xl font-bold">Sign in to buy vouchers</h1>
-          <p className="max-w-sm text-sm text-muted-foreground">You need an account and wallet balance to purchase voucher plans.</p>
-           <Button asChild variant="glossy"><Link to={registrationUrl}>Create an Account</Link></Button>
-        </div>
+        <Navigate to={registrationUrl} replace />
       </Unauthenticated>
       <AuthLoading>
         <div className="mx-auto max-w-6xl px-4 py-12">
