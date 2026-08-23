@@ -31,6 +31,15 @@ app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
+// API responses contain authenticated and frequently changing application
+// state. Prevent browsers and reverse proxies from turning a fresh settings
+// read into an empty 304 response after an admin saves changes.
+app.disable("etag");
+app.use("/api", (_req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+});
+
 app.use("/api", router);
 
 export default app;
