@@ -217,6 +217,30 @@ router.post("/users/profile", async (req, res) => {
   return res.json(publicUser(result.rows[0]));
 });
 
+router.post("/users/change-password", async (req, res) => {
+  const user = await currentUser(tokenFor(req));
+  const currentPassword = String(req.body?.currentPassword ?? "");
+  const newPassword = String(req.body?.newPassword ?? "");
+  if (!user) {
+    res.status(401).json({ error: "Not logged in" });
+    return;
+  }
+  if (!currentPassword || !newPassword) {
+    res.status(400).json({ error: "Current password and new password are required" });
+    return;
+  }
+  if (newPassword.length < 6) {
+    res.status(400).json({ error: "New password must be at least 6 characters" });
+    return;
+  }
+  if (!passwordMatches(currentPassword, user.password_hash as string | null)) {
+    res.status(401).json({ error: "Current password is incorrect" });
+    return;
+  }
+  await pool.query("UPDATE pconnect_users SET password_hash=$1 WHERE id=$2", [passwordHash(newPassword), user.id]);
+  res.json({ ok: true });
+});
+
 router.get("/purchases", async (req, res) => {
   const user = await currentUser(tokenFor(req));
   if (!user) return res.json([]);

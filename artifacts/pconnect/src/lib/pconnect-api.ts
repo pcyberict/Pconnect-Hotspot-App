@@ -12,6 +12,7 @@ export const api = {
     getCurrentUser: endpoint("users.getCurrentUser"),
     updateCurrentUser: endpoint("users.updateCurrentUser"),
     updateMyProfile: endpoint("users.updateMyProfile"),
+    changePassword: endpoint("users.changePassword"),
   },
   wallets: { getMyWallet: endpoint("wallets.getMyWallet") },
   wallet: {
@@ -73,6 +74,7 @@ async function request(fn: Endpoint, args: Args = {}, method: "GET" | "POST" = "
     "users.getCurrentUser": "me",
     "users.updateCurrentUser": "users/sync",
     "users.updateMyProfile": "users/profile",
+    "users.changePassword": "users/change-password",
     "wallets.getMyWallet": "wallet",
     "wallet.deposits.getMyDepositHistory": "deposits",
     "wallet.deposits.createPendingDeposit": "deposits",

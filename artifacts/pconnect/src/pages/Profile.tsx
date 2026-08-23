@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation } from "@/lib/pconnect-api.ts";
 import { toast } from "sonner";
-import { User, Mail, Phone, Save, LogOut, ShieldCheck } from "lucide-react";
+import { User, Mail, Phone, Save, LogOut, ShieldCheck, LockKeyhole, Eye, EyeOff } from "lucide-react";
 import { api } from "@/lib/pconnect-api.ts";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -11,11 +11,16 @@ import { useAuth } from "@/hooks/use-auth.ts";
 function ProfileInner() {
   const me = useQuery(api.users.getCurrentUser, {});
   const updateProfile = useMutation(api.users.updateMyProfile);
+  const changePassword = useMutation(api.users.changePassword);
   const { signout } = useAuth();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [passwords, setPasswords] = useState({ current: "", next: "", confirm: "" });
+  const [showPasswords, setShowPasswords] = useState({ current: false, next: false, confirm: false });
+  const [passwordSaving, setPasswordSaving] = useState(false);
 
   if (me != null && !initialized) {
     setName(me.name ?? "");
@@ -44,6 +49,28 @@ function ProfileInner() {
   };
 
   const initials = (me.name ?? me.email ?? "U").slice(0, 2).toUpperCase();
+
+  const handleChangePassword = async () => {
+    if (!passwords.current || !passwords.next || !passwords.confirm) {
+      toast.error("Complete all password fields");
+      return;
+    }
+    if (passwords.next !== passwords.confirm) {
+      toast.error("New passwords do not match");
+      return;
+    }
+    setPasswordSaving(true);
+    try {
+      await changePassword({ currentPassword: passwords.current, newPassword: passwords.next });
+      toast.success("Password changed successfully");
+      setPasswords({ current: "", next: "", confirm: "" });
+      setShowPasswordForm(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error changing password");
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-xl px-4 py-10 md:px-8">
@@ -100,6 +127,49 @@ function ProfileInner() {
             </Button>
           </div>
         </div>
+      </div>
+      <div className="mt-5 rounded-3xl border border-[#7519e9]/20 bg-gradient-to-br from-[#1a0b30]/90 via-[#150925]/90 to-[#0e0620]/90 shadow-[0_0_40px_rgba(117,25,233,0.06)]">
+        <div className="flex items-center justify-between gap-4 p-6">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-xl bg-[#7519e9]/20 text-purple-300"><LockKeyhole size={18} /></div>
+            <div>
+              <h2 className="font-semibold text-white">Password</h2>
+              <p className="text-xs text-white/40">Update your account login password.</p>
+            </div>
+          </div>
+          <Button variant="secondary" className="shrink-0" onClick={() => setShowPasswordForm(value => !value)}>
+            {showPasswordForm ? "Cancel" : "Change password"}
+          </Button>
+        </div>
+        {showPasswordForm && (
+          <div className="space-y-4 border-t border-white/10 p-6">
+            {([
+              ["current", "Current password"],
+              ["next", "New password"],
+              ["confirm", "Confirm new password"],
+            ] as const).map(([key, label]) => (
+              <div key={key}>
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-white/50">{label}</label>
+                <div className="relative">
+                  <input
+                    type={showPasswords[key] ? "text" : "password"}
+                    value={passwords[key]}
+                    onChange={event => setPasswords(value => ({ ...value, [key]: event.target.value }))}
+                    autoComplete={key === "current" ? "current-password" : "new-password"}
+                    minLength={key !== "current" ? 6 : undefined}
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 pr-11 text-sm text-white placeholder-white/25 focus:border-[#7519e9]/60 focus:outline-none focus:ring-1 focus:ring-[#7519e9]/40"
+                  />
+                  <button type="button" onClick={() => setShowPasswords(value => ({ ...value, [key]: !value[key] }))} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/35 hover:text-white/70">
+                    {showPasswords[key] ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+            ))}
+            <Button variant="glossy" className="w-full sm:w-auto" disabled={passwordSaving} onClick={() => void handleChangePassword()}>
+              <LockKeyhole size={14} /> {passwordSaving ? "Changing password…" : "Save new password"}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
