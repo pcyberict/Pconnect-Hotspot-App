@@ -24,7 +24,9 @@ export async function sendEmail(to: string, subject: string, html: string) {
     host: settings.smtp_host,
     port,
     secure: port === 465,
-    auth: { user: settings.smtp_username, pass: settings.smtp_password },
+    // Providers commonly display app passwords in groups separated by spaces.
+    // Those spaces are formatting, not part of the SMTP credential.
+    auth: { user: settings.smtp_username, pass: settings.smtp_password.replace(/\s+/g, "") },
   });
   try {
     await transport.sendMail({
