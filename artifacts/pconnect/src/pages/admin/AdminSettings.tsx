@@ -49,12 +49,12 @@ function ImageField({ label, hint, value, fallback, onChange }: { label: string;
   const choose = (file?: File) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) { toast.error("Choose an image file"); return; }
-    if (file.size > 5 * 1024 * 1024) { toast.error("Images must be 5MB or smaller"); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error("Images must be 10MB or smaller"); return; }
     setReading(true);
     const objectUrl = URL.createObjectURL(file);
     const image = new Image();
     image.onload = () => {
-      const maxDimension = 1600;
+      const maxDimension = 1280;
       const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
       const canvas = document.createElement("canvas");
       canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
@@ -63,8 +63,17 @@ function ImageField({ label, hint, value, fallback, onChange }: { label: string;
       if (!context) {
         toast.error("Could not process image");
       } else {
+        context.imageSmoothingEnabled = true;
+        context.imageSmoothingQuality = "high";
         context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        onChange(canvas.toDataURL("image/webp", 0.82));
+        const compressed = canvas.toDataURL("image/webp", 0.78);
+        if (!compressed.startsWith("data:image/webp;")) {
+          toast.error("Your browser could not create a WebP image");
+        } else {
+          onChange(compressed);
+          const compressedBytes = Math.round((compressed.length * 3) / 4);
+          toast.success(`Compressed to WebP (${Math.max(1, Math.round(compressedBytes / 1024))} KB)`);
+        }
       }
       URL.revokeObjectURL(objectUrl);
       setReading(false);
@@ -76,7 +85,7 @@ function ImageField({ label, hint, value, fallback, onChange }: { label: string;
     };
     image.src = objectUrl;
   };
-  return <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4"><div className="flex flex-col gap-4 sm:flex-row sm:items-center"><div className="flex h-24 w-40 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-black/20"><img src={src} alt="" className="max-h-full max-w-full object-contain" /></div><div className="min-w-0 flex-1"><p className="text-sm font-medium text-white">{label}</p><p className="mt-1 text-xs text-white/40">{hint}</p><label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-medium text-white/80 hover:bg-white/10">{reading ? "Reading image…" : <><ImagePlus size={14} /> Upload image</>}<input type="file" accept="image/*" className="hidden" disabled={reading} onChange={e => choose(e.target.files?.[0])} /></label>{value && <button type="button" className="ml-3 text-xs text-red-300 hover:text-red-200" onClick={() => onChange("")}>Use default</button>}</div></div></div>;
+  return <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4"><div className="flex flex-col gap-4 sm:flex-row sm:items-center"><div className="flex h-24 w-40 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-black/20"><img src={src} alt="" className="max-h-full max-w-full object-contain" /></div><div className="min-w-0 flex-1"><p className="text-sm font-medium text-white">{label}</p><p className="mt-1 text-xs text-white/40">{hint}</p><p className="mt-1 text-[11px] text-emerald-300/70">Uploads are automatically resized and compressed to WebP.</p><label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs font-medium text-white/80 hover:bg-white/10">{reading ? "Compressing image…" : <><ImagePlus size={14} /> Upload image</>}<input type="file" accept="image/*" className="hidden" disabled={reading} onChange={e => choose(e.target.files?.[0])} /></label>{value && <button type="button" className="ml-3 text-xs text-red-300 hover:text-red-200" onClick={() => onChange("")}>Use default</button>}</div></div></div>;
 }
 
 type AdminUser = { _id: string; name?: string | null; email: string; walletBalance: number };
