@@ -111,11 +111,24 @@ async function request(fn: Endpoint, args: Args = {}, method: "GET" | "POST" = "
     "notifications.markAllRead": "notifications/read-all",
   };
   const url = `${API_BASE}/${paths[fn] ?? fn}${method === "GET" && params.size ? `?${params}` : ""}`;
-  const response = await fetch(url, {
-    method,
-    headers: { "Content-Type": "application/json", "x-pconnect-token": token },
-    ...(method === "POST" ? { body: JSON.stringify(args) } : {}),
-  });
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 20_000);
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json", "x-pconnect-token": token },
+      ...(method === "POST" ? { body: JSON.stringify(args) } : {}),
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("The request timed out. Please check the connection and try again.");
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(body.error ?? "Request failed");
   const camelize = (value: unknown): unknown => {
