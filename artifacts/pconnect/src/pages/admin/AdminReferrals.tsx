@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Save, UserPlus, Users, WalletCards } from "lucide-react";
 import { toast } from "sonner";
 import { api, useMutation, useQuery } from "@/lib/pconnect-api.ts";
@@ -30,25 +30,34 @@ export default function AdminReferrals() {
   const [type, setType] = useState<"flat" | "percentage">("flat");
   const [value, setValue] = useState("0");
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const hydrated = useRef(false);
 
   useEffect(() => {
-    if (!data) return;
+    if (!data || hydrated.current) return;
     // The shared API client camel-cases response keys, including setting keys.
     // Support the raw names too so this stays compatible with direct API data.
     const settings = data.settings as Record<string, string | undefined>;
     const activeSetting = settings.referralActive ?? settings.referral_active;
     const typeSetting = settings.referralCommissionType ?? settings.referral_commission_type;
     const valueSetting = settings.referralCommissionValue ?? settings.referral_commission_value;
+    // Do not hydrate from an empty cached response; wait for the real settings
+    // response so defaults cannot overwrite values returned by the API later.
+    if (activeSetting === undefined && typeSetting === undefined && valueSetting === undefined) return;
     setActive(activeSetting !== "false");
     setType(typeSetting === "percentage" ? "percentage" : "flat");
     setValue(valueSetting ?? "0");
+    hydrated.current = true;
   }, [data]);
 
   const save = async () => {
+    setSaveError("");
     const amount = Number(value);
     const validMax = type === "percentage" ? 100 : 5000000;
     if (!Number.isFinite(amount) || amount < 0 || amount > validMax) {
-      toast.error(type === "percentage" ? "Enter a percentage from 0 to 100" : "Enter a valid flat commission");
+      const message = type === "percentage" ? "Enter a percentage from 0 to 100" : "Enter a valid flat commission";
+      setSaveError(message);
+      toast.error(message);
       return;
     }
     setSaving(true);
@@ -62,7 +71,9 @@ export default function AdminReferrals() {
       });
       toast.success(active ? "Referral programme settings saved" : "Referral programme deactivated");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not save referral settings");
+      const message = error instanceof Error ? error.message : "Could not save referral settings";
+      setSaveError(message);
+      toast.error(message);
     } finally {
       setSaving(false);
     }
@@ -121,6 +132,7 @@ export default function AdminReferrals() {
             <input id="referral-commission-value" type="number" min="0" max={type === "percentage" ? 100 : 5000000} step={type === "percentage" ? "0.01" : "1"} value={value} onChange={(event) => setValue(event.target.value)} className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-lg font-semibold text-white outline-none focus:border-[#df20ba]/60" />
           </div>
         </div>
+        {saveError && <p role="alert" className="mt-4 rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-200">{saveError}</p>}
         <Button variant="glossy" className="mt-6 w-full sm:w-auto" disabled={saving} onClick={() => void save()}><Save size={15} /> {saving ? "Saving…" : "Save referral settings"}</Button>
       </section>
 
