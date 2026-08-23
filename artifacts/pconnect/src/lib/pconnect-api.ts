@@ -134,6 +134,10 @@ async function request(fn: Endpoint, args: Args = {}, method: "GET" | "POST" = "
     throw new Error("The API server is unavailable. Please check the server and database connection.");
   }
   if (!response.ok) throw new Error(body.error ?? "Request failed");
+  // Settings keys are user-configured database keys (for example,
+  // `site_name` and `smtp_host`), not API response property names. Keep them
+  // untouched so the admin form can rehydrate the same keys after navigation.
+  if (fn === "siteSettings.getAll") return body;
   const camelize = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(camelize);
     if (!value || typeof value !== "object") return value;
