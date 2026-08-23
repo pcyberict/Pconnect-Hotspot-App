@@ -37,8 +37,11 @@ function hashValue(value: string) {
   return createHash("sha256").update(value).digest("hex");
 }
 
+const referralCodeAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
 function createReferralCode() {
-  return `p${randomInt(10000, 100000)}`;
+  const bytes = randomBytes(6);
+  return Array.from(bytes, (byte) => referralCodeAlphabet[byte % referralCodeAlphabet.length]).join("");
 }
 
 async function creditReferralCommission(
@@ -373,11 +376,11 @@ router.post("/notifications/read-all", async (req, res) => {
 
 router.post("/users/sync", async (req, res) => {
   const token = tokenFor(req);
-  const result = await pool.query(`INSERT INTO pconnect_users (token_identifier,name,email,role)
-    VALUES ($1,$2,$3,CASE WHEN NOT EXISTS (SELECT 1 FROM pconnect_users) THEN 'admin' ELSE 'user' END)
+  const result = await pool.query(`INSERT INTO pconnect_users (token_identifier,name,email,role,referral_code)
+    VALUES ($1,$2,$3,CASE WHEN NOT EXISTS (SELECT 1 FROM pconnect_users) THEN 'admin' ELSE 'user' END,$4)
     ON CONFLICT (token_identifier) DO UPDATE SET name=COALESCE(EXCLUDED.name,pconnect_users.name),
       email=COALESCE(EXCLUDED.email,pconnect_users.email)
-    RETURNING *`, [token, req.body?.name ?? "Demo Customer", req.body?.email ?? "demo@pconnect.local"]);
+    RETURNING *`, [token, req.body?.name ?? "Demo Customer", req.body?.email ?? "demo@pconnect.local", createReferralCode()]);
   await pool.query(`INSERT INTO pconnect_wallets (user_id,balance) VALUES ($1,0) ON CONFLICT (user_id) DO NOTHING`, [result.rows[0].id]);
   res.json(withId(result.rows[0]));
 });

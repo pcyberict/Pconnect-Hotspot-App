@@ -194,9 +194,22 @@ export async function bootstrapDatabase() {
   } finally {
     client.release();
   }
-  await pool.query(`UPDATE pconnect_users
-    SET referral_code = 'PCYBER-' || upper(substr(replace(id::text, '-', ''), 1, 8))
-    WHERE referral_code IS NULL`);
+  await pool.query(`DO $$
+    DECLARE
+      user_row RECORD;
+      new_code text;
+    BEGIN
+      FOR user_row IN
+        SELECT id FROM pconnect_users
+        WHERE referral_code IS NULL OR referral_code !~ '^[A-Z0-9]{6}$'
+      LOOP
+        LOOP
+          new_code := upper(substr(md5(random()::text || clock_timestamp()::text || user_row.id::text), 1, 6));
+          EXIT WHEN NOT EXISTS (SELECT 1 FROM pconnect_users WHERE referral_code = new_code);
+        END LOOP;
+        UPDATE pconnect_users SET referral_code = new_code WHERE id = user_row.id;
+      END LOOP;
+    END $$`);
 
   await seed();
 }
