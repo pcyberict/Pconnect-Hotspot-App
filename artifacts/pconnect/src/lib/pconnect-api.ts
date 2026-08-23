@@ -60,6 +60,10 @@ export const api = {
     markRead: endpoint("notifications.markRead"),
     markAllRead: endpoint("notifications.markAllRead"),
   },
+  referrals: {
+    getMine: endpoint("referrals.getMine"),
+    getAdmin: endpoint("referrals.getAdmin"),
+  },
 };
 
 const API_BASE = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/api`;
@@ -109,6 +113,8 @@ async function request(fn: Endpoint, args: Args = {}, method: "GET" | "POST" = "
     "notifications.listMine": "notifications",
     "notifications.markRead": "notifications/read",
     "notifications.markAllRead": "notifications/read-all",
+    "referrals.getMine": "referrals",
+    "referrals.getAdmin": "admin/referrals",
   };
   const url = `${API_BASE}/${paths[fn] ?? fn}${method === "GET" && params.size ? `?${params}` : ""}`;
   const controller = new AbortController();

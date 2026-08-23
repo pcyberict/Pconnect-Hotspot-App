@@ -12,7 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 export const userRole = pgEnum("pconnect_user_role", ["user", "admin"]);
-export const walletTransactionType = pgEnum("pconnect_wallet_tx_type", ["deposit", "purchase", "manual_funding", "welcome_bonus"]);
+export const walletTransactionType = pgEnum("pconnect_wallet_tx_type", ["deposit", "purchase", "manual_funding", "welcome_bonus", "referral_commission"]);
 export const walletTransactionStatus = pgEnum("pconnect_wallet_tx_status", ["pending", "successful", "failed"]);
 export const voucherStatus = pgEnum("pconnect_voucher_status", ["available", "reserved", "sold", "disabled"]);
 export const purchaseStatus = pgEnum("pconnect_purchase_status", ["completed", "refunded"]);
@@ -26,6 +26,8 @@ export const users = pgTable("pconnect_users", {
   passwordHash: text("password_hash"),
   emailVerified: boolean("email_verified").notNull().default(false),
   role: userRole("role").notNull().default("user"),
+  referralCode: text("referral_code"),
+  referredByUserId: uuid("referred_by_user_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   tokenIdx: uniqueIndex("pconnect_users_token_idx").on(table.tokenIdentifier),
@@ -62,9 +64,24 @@ export const emailVerificationTokens = pgTable("pconnect_email_verification_toke
   phone: text("phone"),
   passwordHash: text("password_hash").notNull(),
   codeHash: text("code_hash").notNull(),
+  referralCode: text("referral_code"),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const referrals = pgTable("pconnect_referrals", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  referrerId: uuid("referrer_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  referredUserId: uuid("referred_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  firstDepositAmount: doublePrecision("first_deposit_amount"),
+  commissionAmount: doublePrecision("commission_amount"),
+  status: text("status").notNull().default("pending"),
+  firstDepositTransactionId: uuid("first_deposit_transaction_id").references(() => walletTransactions.id),
+  creditedAt: timestamp("credited_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  referredUserIdx: uniqueIndex("pconnect_referrals_referred_user_idx").on(table.referredUserId),
+}));
 
 export const passwordResetTokens = pgTable("pconnect_password_reset_tokens", {
   id: uuid("id").defaultRandom().primaryKey(),

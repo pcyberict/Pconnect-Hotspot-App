@@ -9,6 +9,7 @@ import AdminPurchases from "./pages/admin/AdminPurchases.tsx";
 import AdminUsers from "./pages/admin/AdminUsers.tsx";
 import AdminSettings from "./pages/admin/AdminSettings.tsx";
 import AdminBonus from "./pages/admin/AdminBonus.tsx";
+import AdminReferrals from "./pages/admin/AdminReferrals.tsx";
 import AuthCallback from "./pages/auth/Callback.tsx";
 import AdminLogin from "./pages/admin/AdminLogin.tsx";
 import Index from "./pages/Index.tsx";
@@ -25,6 +26,7 @@ import ComingSoon from "./pages/ComingSoon.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
+import Referrals from "./pages/Referrals.tsx";
 
 export default function App() {
   return (
@@ -44,6 +46,7 @@ export default function App() {
             <Route path="users" element={<AdminUsers />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="bonus" element={<AdminBonus />} />
+            <Route path="referrals" element={<AdminReferrals />} />
           </Route>
           <Route element={<AppLayout />}>
             <Route path="/" element={<Index />} />
@@ -57,6 +60,7 @@ export default function App() {
             <Route path="/wallet" element={<WalletPage />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/notifications" element={<NotificationsPage />} />
+             <Route path="/referrals" element={<Referrals />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

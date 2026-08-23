@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ShieldCheck, LogOut, Home, Ticket, Info, HeadphonesIcon, UserRound, Bell } from "lucide-react";
+import { Menu, X, ShieldCheck, LogOut, Home, Ticket, Info, HeadphonesIcon, UserRound, Bell, Gift } from "lucide-react";
 import { Authenticated, Unauthenticated, AuthLoading, useQuery, useConvexAuth } from "@/lib/pconnect-api.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
@@ -49,6 +49,10 @@ export default function SiteHeader() {
             </Link>
           ))}
           <Authenticated>
+            <Link to="/referrals" className={cn("flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground", location.pathname === "/referrals" && "text-foreground")}>
+              <Gift size={14} />
+              Refer &amp; Earn
+            </Link>
             <Link to="/profile" className={cn("flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground", location.pathname === "/profile" && "text-foreground")}>
               <UserRound size={14} />
               Account
@@ -131,6 +135,10 @@ export default function SiteHeader() {
               </Link>
             ))}
             <Authenticated>
+              <Link to="/referrals" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-white/5 hover:text-foreground">
+                <Gift size={15} />
+                Refer &amp; Earn
+              </Link>
               <Link to="/profile" onClick={() => setOpen(false)} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-white/5 hover:text-foreground">
                 <UserRound size={15} />
                 Account

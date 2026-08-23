@@ -12,6 +12,7 @@ const schemaStatements = [
   END $$`,
   `ALTER TYPE pconnect_wallet_tx_type ADD VALUE IF NOT EXISTS 'manual_funding'`,
   `ALTER TYPE pconnect_wallet_tx_type ADD VALUE IF NOT EXISTS 'welcome_bonus'`,
+  `ALTER TYPE pconnect_wallet_tx_type ADD VALUE IF NOT EXISTS 'referral_commission'`,
   `DO $$ BEGIN
     CREATE TYPE pconnect_wallet_tx_status AS ENUM ('pending', 'successful', 'failed');
   EXCEPTION WHEN duplicate_object THEN NULL;
@@ -33,6 +34,8 @@ const schemaStatements = [
     password_hash text,
     email_verified boolean NOT NULL DEFAULT false,
     role pconnect_user_role NOT NULL DEFAULT 'user',
+    referral_code text,
+    referred_by_user_id uuid,
     created_at timestamptz NOT NULL DEFAULT now()
   )`,
   `CREATE TABLE IF NOT EXISTS pconnect_email_verification_tokens (
@@ -42,6 +45,7 @@ const schemaStatements = [
     phone text,
     password_hash text NOT NULL,
     code_hash text NOT NULL,
+    referral_code text,
     expires_at timestamptz NOT NULL,
     created_at timestamptz NOT NULL DEFAULT now()
   )`,
@@ -102,6 +106,17 @@ const schemaStatements = [
     payment_channel text,
     virtual_account jsonb
   )`,
+  `CREATE TABLE IF NOT EXISTS pconnect_referrals (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    referrer_id uuid NOT NULL REFERENCES pconnect_users(id) ON DELETE CASCADE,
+    referred_user_id uuid NOT NULL REFERENCES pconnect_users(id) ON DELETE CASCADE,
+    first_deposit_amount double precision,
+    commission_amount double precision,
+    status text NOT NULL DEFAULT 'pending',
+    first_deposit_transaction_id uuid REFERENCES pconnect_wallet_transactions(id),
+    credited_at timestamptz,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`,
   `CREATE TABLE IF NOT EXISTS pconnect_purchases (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id uuid NOT NULL REFERENCES pconnect_users(id),
@@ -136,6 +151,9 @@ const schemaStatements = [
   `ALTER TABLE pconnect_users ADD COLUMN IF NOT EXISTS phone text`,
   `ALTER TABLE pconnect_users ADD COLUMN IF NOT EXISTS password_hash text`,
   `ALTER TABLE pconnect_users ADD COLUMN IF NOT EXISTS email_verified boolean NOT NULL DEFAULT false`,
+  `ALTER TABLE pconnect_users ADD COLUMN IF NOT EXISTS referral_code text`,
+  `ALTER TABLE pconnect_users ADD COLUMN IF NOT EXISTS referred_by_user_id uuid`,
+  `ALTER TABLE pconnect_email_verification_tokens ADD COLUMN IF NOT EXISTS referral_code text`,
   `ALTER TABLE pconnect_voucher_plans ADD COLUMN IF NOT EXISTS data_limit text`,
   `ALTER TABLE pconnect_voucher_plans ADD COLUMN IF NOT EXISTS description text`,
   `ALTER TABLE pconnect_voucher_plans ADD COLUMN IF NOT EXISTS features jsonb`,
@@ -153,11 +171,13 @@ const schemaStatements = [
   `ALTER TABLE pconnect_notifications ADD COLUMN IF NOT EXISTS read_at timestamptz`,
   `CREATE UNIQUE INDEX IF NOT EXISTS pconnect_users_token_idx ON pconnect_users(token_identifier)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS pconnect_users_email_idx ON pconnect_users(email)`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS pconnect_users_referral_code_idx ON pconnect_users(referral_code)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS pconnect_wallets_user_idx ON pconnect_wallets(user_id)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS pconnect_vouchers_username_idx ON pconnect_vouchers(username)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS pconnect_wallet_transactions_reference_idx ON pconnect_wallet_transactions(reference)`,
   `CREATE UNIQUE INDEX IF NOT EXISTS pconnect_site_settings_key_idx ON pconnect_site_settings(key)`,
   `CREATE INDEX IF NOT EXISTS pconnect_notifications_user_created_idx ON pconnect_notifications(user_id, created_at DESC)`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS pconnect_referrals_referred_user_idx ON pconnect_referrals(referred_user_id)`,
 ];
 
 export async function bootstrapDatabase() {
@@ -174,6 +194,9 @@ export async function bootstrapDatabase() {
   } finally {
     client.release();
   }
+  await pool.query(`UPDATE pconnect_users
+    SET referral_code = 'PCYBER-' || upper(substr(replace(id::text, '-', ''), 1, 8))
+    WHERE referral_code IS NULL`);
 
   await seed();
 }

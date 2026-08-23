@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
-import { Loader2, User, Lock, Mail, Phone, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Loader2, User, Lock, Mail, Phone, Eye, EyeOff, ArrowLeft, Gift } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth.ts";
 import SiteHeader from "@/components/site-header.tsx";
 import SiteFooter from "@/components/site-footer.tsx";
@@ -23,10 +23,14 @@ export default function Login() {
     searchParams.get("tab") === "register" ? "register" : "login"
   );
   const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "", referralCode: "" });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [verification, setVerification] = useState<{ email: string; code: string } | null>(null);
+  useEffect(() => {
+    const referral = searchParams.get("ref")?.trim().toUpperCase();
+    if (referral) setForm((current) => ({ ...current, referralCode: referral }));
+  }, [searchParams]);
   const setField = (key: keyof typeof form) => (event: React.ChangeEvent<HTMLInputElement>) =>
     setForm((current) => ({ ...current, [key]: event.target.value }));
   const submit = async () => {
@@ -35,7 +39,7 @@ export default function Login() {
     try {
       if (tab === "login") await login(form.email, form.password);
       else {
-        const result = await register(form.name, form.email, form.phone, form.password);
+        const result = await register(form.name, form.email, form.phone, form.password, form.referralCode);
         if (result.verificationRequired) { setVerification({ email: result.email, code: "" }); return; }
       }
       navigate(getPostAuthDestination(searchParams.get("redirect")), { replace: true });
@@ -138,6 +142,10 @@ export default function Login() {
                         {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                       </button>
                     </div>
+                     <div className="flex items-center gap-3 rounded-xl border border-white/15 bg-black/40 px-4 py-3 focus-within:border-[#7519e9]/80 transition-all">
+                       <Gift size={16} className="text-white/40 shrink-0" />
+                       <input type="text" value={form.referralCode} onChange={setField("referralCode")} placeholder="Referral code (optional)" autoComplete="off" className="flex-1 bg-transparent text-sm uppercase text-white placeholder-white/30 outline-none" />
+                     </div>
                     <button onClick={() => void submit()} disabled={isLoading || submitting} className="w-full rounded-xl bg-gradient-to-r from-[#7519e9] to-[#df20ba] py-3 text-sm font-bold text-white shadow-[0_0_24px_rgba(117,25,233,0.4)] hover:opacity-90 transition-opacity disabled:opacity-60 cursor-pointer mt-1">
                       {submitting ? (<span className="flex items-center justify-center gap-2"><Loader2 size={15} className="animate-spin" /> Signing in…</span>) : "Login"}
                     </button>

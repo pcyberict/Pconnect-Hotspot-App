@@ -37,6 +37,54 @@ function hashValue(value: string) {
   return createHash("sha256").update(value).digest("hex");
 }
 
+function createReferralCode() {
+  return `PCYBER-${randomBytes(4).toString("hex").toUpperCase()}`;
+}
+
+async function creditReferralCommission(
+  client: { query: (text: string, values?: unknown[]) => Promise<{ rows: any[] }> },
+  referredUserId: string,
+  depositAmount: number,
+  depositTransactionId: string,
+) {
+  const referral = (await client.query(
+    "SELECT * FROM pconnect_referrals WHERE referred_user_id=$1 FOR UPDATE",
+    [referredUserId],
+  )).rows[0];
+  if (!referral || referral.status !== "pending") return;
+  const settings = (await client.query(
+    "SELECT key,value FROM pconnect_site_settings WHERE key = ANY($1::text[])",
+    [["referral_active", "referral_commission_type", "referral_commission_value"]],
+  )).rows as { key: string; value: string }[];
+  const values = Object.fromEntries(settings.map((item) => [item.key, item.value]));
+  const active = values.referral_active !== "false";
+  const configuredValue = Number(values.referral_commission_value ?? 0);
+  const type = values.referral_commission_type === "percentage" ? "percentage" : "flat";
+  const commission = type === "percentage" ? depositAmount * configuredValue / 100 : configuredValue;
+  if (!active || !Number.isFinite(commission) || commission <= 0) {
+    await client.query("UPDATE pconnect_referrals SET first_deposit_amount=$1, status='skipped' WHERE id=$2", [depositAmount, referral.id]);
+    return;
+  }
+  const wallet = (await client.query("SELECT * FROM pconnect_wallets WHERE user_id=$1 FOR UPDATE", [referral.referrer_id])).rows[0];
+  if (!wallet) return;
+  const previousBalance = Number(wallet.balance);
+  const newBalance = previousBalance + commission;
+  const reference = `pcc-referral-${randomUUID()}`;
+  await client.query(`INSERT INTO pconnect_wallet_transactions
+    (user_id,wallet_id,type,amount,previous_balance,new_balance,status,reference,provider,description)
+    VALUES ($1,$2,'referral_commission',$3,$4,$5,'successful',$6,'referral',$7)`,
+    [referral.referrer_id, wallet.id, commission, previousBalance, newBalance, reference,
+      `Referral commission from first deposit of ${depositAmount.toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 })}`]);
+  await client.query("UPDATE pconnect_wallets SET balance=$1 WHERE id=$2", [newBalance, wallet.id]);
+  await client.query(`UPDATE pconnect_referrals
+    SET first_deposit_amount=$1, commission_amount=$2, status='credited',
+        first_deposit_transaction_id=$3, credited_at=now()
+    WHERE id=$4`, [depositAmount, commission, depositTransactionId, referral.id]);
+  await client.query(`INSERT INTO pconnect_notifications (user_id,title,message,type)
+    VALUES ($1,'Referral commission credited',$2,'success')`,
+    [referral.referrer_id, `${commission.toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 })} referral commission has been credited to your wallet.`]);
+}
+
 function otpCode() {
   return String(randomInt(100000, 1000000));
 }
@@ -53,17 +101,22 @@ router.post("/auth/register", async (req, res) => {
   const email = String(req.body?.email ?? "").trim().toLowerCase();
   const phone = String(req.body?.phone ?? "").trim();
   const password = String(req.body?.password ?? "");
+  const submittedReferralCode = String(req.body?.referralCode ?? "").trim().toUpperCase();
   if (!name || !email || !password || password.length < 6) {
     return res.status(400).json({ error: "Name, email, and a password of at least 6 characters are required" });
   }
   try {
     const existing = await pool.query("SELECT id FROM pconnect_users WHERE lower(email)=lower($1) LIMIT 1", [email]);
     if (existing.rows[0]) return res.status(409).json({ error: "An account with this email already exists" });
+    if (submittedReferralCode) {
+      const referrer = await pool.query("SELECT id FROM pconnect_users WHERE referral_code=$1", [submittedReferralCode]);
+      if (!referrer.rows[0]) return res.status(400).json({ error: "That referral code is not valid" });
+    }
     const code = otpCode();
     await pool.query("DELETE FROM pconnect_email_verification_tokens WHERE lower(email)=lower($1)", [email]);
     await pool.query(`INSERT INTO pconnect_email_verification_tokens
-      (email,name,phone,password_hash,code_hash,expires_at) VALUES ($1,$2,$3,$4,$5,now()+interval '10 minutes')`,
-      [email, name, phone || null, passwordHash(password), hashValue(code)]);
+      (email,name,phone,password_hash,code_hash,referral_code,expires_at) VALUES ($1,$2,$3,$4,$5,$6,now()+interval '10 minutes')`,
+      [email, name, phone || null, passwordHash(password), hashValue(code), submittedReferralCode || null]);
     await sendEmail(email, "Your registration verification code", emailLayout("Verify your email", `<p>Enter this code to complete your registration:</p><p style="font-size:28px;font-weight:bold;letter-spacing:8px">${code}</p><p>This code expires in 10 minutes.</p>`));
     return res.status(202).json({ verificationRequired: true, email });
   } catch (error) {
@@ -87,10 +140,13 @@ router.post("/auth/register/verify", async (req, res) => {
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
+      const referrer = pending.referral_code
+        ? (await client.query("SELECT id FROM pconnect_users WHERE referral_code=$1", [pending.referral_code])).rows[0]
+        : null;
       const result = await client.query(`INSERT INTO pconnect_users
-        (token_identifier,name,email,phone,password_hash,role,email_verified)
-        VALUES ($1,$2,$3,$4,$5,'user',true) RETURNING *`,
-        [token, pending.name, pending.email, pending.phone, pending.password_hash]);
+        (token_identifier,name,email,phone,password_hash,role,email_verified,referral_code,referred_by_user_id)
+        VALUES ($1,$2,$3,$4,$5,'user',true,$6,$7) RETURNING *`,
+        [token, pending.name, pending.email, pending.phone, pending.password_hash, createReferralCode(), referrer?.id ?? null]);
       const bonusSettings = (await client.query(
         "SELECT key, value FROM pconnect_site_settings WHERE key = ANY($1::text[])",
         [["welcome_bonus_active", "welcome_bonus_amount"]],
@@ -103,6 +159,12 @@ router.post("/auth/register/verify", async (req, res) => {
         "INSERT INTO pconnect_wallets (user_id,balance) VALUES ($1,$2) RETURNING *",
         [result.rows[0].id, welcomeBonus],
       )).rows[0];
+      if (referrer) {
+        await client.query(
+          "INSERT INTO pconnect_referrals (referrer_id,referred_user_id) VALUES ($1,$2)",
+          [referrer.id, result.rows[0].id],
+        );
+      }
       if (welcomeBonus > 0) {
         const reference = `pcc-bonus-${randomUUID()}`;
         await client.query(`INSERT INTO pconnect_wallet_transactions
@@ -320,6 +382,19 @@ router.post("/users/sync", async (req, res) => {
   res.json(withId(result.rows[0]));
 });
 
+router.get("/referrals", async (req, res) => {
+  const user = await currentUser(tokenFor(req));
+  if (!user) return res.status(401).json({ error: "Not logged in" });
+  const referrals = await pool.query(`SELECT r.*, u.name AS "referredName", u.email AS "referredEmail"
+    FROM pconnect_referrals r JOIN pconnect_users u ON u.id=r.referred_user_id
+    WHERE r.referrer_id=$1 ORDER BY r.created_at DESC`, [user.id]);
+  return res.json({
+    referralCode: user.referral_code,
+    referrals: referrals.rows.map(withId),
+    creditedTotal: referrals.rows.reduce((total, row) => total + Number(row.commission_amount ?? 0), 0),
+  });
+});
+
 router.post("/users/profile", async (req, res) => {
   const user = await currentUser(tokenFor(req));
   if (!user) return res.status(404).json({ error: "User not found" });
@@ -476,11 +551,12 @@ router.post("/admin/users/manual-funding", async (req, res) => {
     const previousBalance = Number(wallet.balance);
     const newBalance = previousBalance + amount;
     const reference = `pcc-manual-${randomUUID()}`;
-    await client.query(`INSERT INTO pconnect_wallet_transactions
+    const fundingTransaction = (await client.query(`INSERT INTO pconnect_wallet_transactions
       (user_id,wallet_id,type,amount,previous_balance,new_balance,status,reference,provider,description)
-      VALUES ($1,$2,'manual_funding',$3,$4,$5,'successful',$6,'admin','Manual funding by admin')`,
-      [userId, wallet.id, amount, previousBalance, newBalance, reference]);
+      VALUES ($1,$2,'manual_funding',$3,$4,$5,'successful',$6,'admin','Manual funding by admin') RETURNING id`,
+      [userId, wallet.id, amount, previousBalance, newBalance, reference])).rows[0];
     await client.query("UPDATE pconnect_wallets SET balance=$1 WHERE id=$2", [newBalance, wallet.id]);
+    await creditReferralCommission(client, userId, amount, fundingTransaction.id);
     await client.query(`INSERT INTO pconnect_notifications (user_id, title, message, type)
       VALUES ($1, 'Wallet funded', $2, 'wallet')`,
       [userId, `${amount.toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 })} Manual funding by admin`]);
@@ -629,6 +705,50 @@ router.post("/deposits", async (req, res) => {
   return res.json({ reference, amount });
 });
 
+router.post("/deposits/verify", async (req, res) => {
+  const user = await currentUser(tokenFor(req));
+  const reference = String(req.body?.reference ?? "");
+  const providerTransactionId = String(req.body?.providerTransactionId ?? "");
+  if (!user) return res.status(401).json({ error: "Not logged in" });
+  if (!reference || !providerTransactionId) return res.status(400).json({ error: "Payment reference is required" });
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const transaction = (await client.query(
+      `SELECT t.*, w.id AS wallet_id, w.balance
+       FROM pconnect_wallet_transactions t
+       JOIN pconnect_wallets w ON w.id=t.wallet_id
+       WHERE t.reference=$1 AND t.user_id=$2 FOR UPDATE`, [reference, user.id],
+    )).rows[0];
+    if (!transaction) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Payment reference not found" });
+    }
+    if (transaction.status === "successful") {
+      await client.query("COMMIT");
+      return res.json({ status: "successful", amount: transaction.amount });
+    }
+    const previousBalance = Number(transaction.balance);
+    const newBalance = previousBalance + Number(transaction.amount);
+    const updated = (await client.query(`UPDATE pconnect_wallet_transactions
+      SET status='successful', previous_balance=$1, new_balance=$2,
+          provider_transaction_id=$3
+      WHERE id=$4 RETURNING id`, [previousBalance, newBalance, providerTransactionId, transaction.id])).rows[0];
+    await client.query("UPDATE pconnect_wallets SET balance=$1 WHERE id=$2", [newBalance, transaction.wallet_id]);
+    await creditReferralCommission(client, String(user.id), Number(transaction.amount), updated.id);
+    await client.query(`INSERT INTO pconnect_notifications (user_id,title,message,type)
+      VALUES ($1,'Wallet funded successfully',$2,'wallet')`,
+      [user.id, `${Number(transaction.amount).toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 })} has been added to your wallet.`]);
+    await client.query("COMMIT");
+    return res.json({ status: "successful", amount: Number(transaction.amount) });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    return res.status(400).json({ error: error instanceof Error ? error.message : "Payment verification failed" });
+  } finally {
+    client.release();
+  }
+});
+
 router.get("/admin/stats", async (_req, res) => {
   const result = await pool.query(`SELECT
     (SELECT COUNT(*)::int FROM pconnect_users) AS "totalUsers",
@@ -640,6 +760,23 @@ router.get("/admin/stats", async (_req, res) => {
     (SELECT COUNT(*)::int FROM pconnect_purchases WHERE created_at >= CURRENT_DATE) AS "todaySales",
     (SELECT COALESCE(SUM(amount),0) FROM pconnect_purchases WHERE created_at >= CURRENT_DATE) AS "todayRevenue"`);
   res.json(result.rows[0]);
+});
+
+router.get("/admin/referrals", async (_req, res) => {
+  const settings = (await pool.query(
+    "SELECT key,value FROM pconnect_site_settings WHERE key = ANY($1::text[])",
+    [["referral_active", "referral_commission_type", "referral_commission_value"]],
+  )).rows;
+  const referrals = await pool.query(`SELECT r.*, ru.name AS "referrerName", ru.email AS "referrerEmail",
+    u.name AS "referredName", u.email AS "referredEmail"
+    FROM pconnect_referrals r
+    JOIN pconnect_users ru ON ru.id=r.referrer_id
+    JOIN pconnect_users u ON u.id=r.referred_user_id
+    ORDER BY r.created_at DESC LIMIT 300`);
+  return res.json({
+    settings: Object.fromEntries(settings.map((row) => [row.key, row.value])),
+    referrals: referrals.rows.map(withId),
+  });
 });
 
 router.get("/admin/inventory", async (_req, res) => {
