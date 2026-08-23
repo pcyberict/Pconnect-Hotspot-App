@@ -17,7 +17,7 @@ const MOBILE_NAV_LINKS = [
 export default function AppLayout() {
   const location = useLocation();
   return (
-    <div className="flex min-h-[100dvh] w-full max-w-full flex-col overflow-x-clip bg-background">
+    <div className="flex min-h-[100dvh] w-full max-w-full flex-col overflow-x-clip bg-[#23103e]/30">
       <SiteHeader />
       <main className="min-w-0 flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0"><Outlet /></main>
       {/* Hide full footer on mobile when logged in; always show on desktop */}
