@@ -3,7 +3,16 @@ set -eu
 
 : "${DATABASE_URL:?DATABASE_URL must be configured in Coolify Runtime Variables}"
 
-API_PORT=8080 node --enable-source-maps /app/api-dist/index.mjs &
+run_api() {
+  while :; do
+    API_PORT=8080 node --enable-source-maps /app/api-dist/index.mjs
+    status=$?
+    echo "The API stopped with exit code ${status}; retrying in 5 seconds. Check DATABASE_URL and PostgreSQL logs." >&2
+    sleep 5
+  done
+}
+
+run_api &
 api_pid=$!
 
 cleanup() {
@@ -13,9 +22,5 @@ cleanup() {
 trap cleanup INT TERM EXIT
 
 sleep 1
-if ! kill -0 "$api_pid" 2>/dev/null; then
-  echo "WARNING: The API process exited during startup. Nginx will continue serving the frontend; check DATABASE_URL and the database schema." >&2
-  wait "$api_pid" || true
-fi
 
 nginx -g "daemon off;"

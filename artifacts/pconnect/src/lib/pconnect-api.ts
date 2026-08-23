@@ -129,7 +129,8 @@ async function request(fn: Endpoint, args: Args = {}, method: "GET" | "POST" = "
   } finally {
     window.clearTimeout(timeout);
   }
-  const body = await response.json().catch(() => ({}));
+  const body = await response.json().catch(() => null);
+  if (!body) throw new Error("The API server is unavailable. Please check the server and database connection.");
   if (!response.ok) throw new Error(body.error ?? "Request failed");
   const camelize = (value: unknown): unknown => {
     if (Array.isArray(value)) return value.map(camelize);

@@ -39,13 +39,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signinRedirect: async () => {},
       login: async (email: string, password: string) => {
         const response = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
-        const data = await response.json();
+         const data = await response.json().catch(() => null);
+         if (!data) throw new Error("The API server is unavailable. Please try again shortly.");
         if (!response.ok) throw new Error(data.error ?? "Login failed");
         save({ token: data.token, user: { profile: { name: data.user.name, email: data.user.email }, role: data.user.role } });
       },
       register: async (name: string, email: string, phone: string, password: string) => {
         const response = await fetch("/api/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email, phone, password }) });
-        const data = await response.json();
+        const data = await response.json().catch(() => null);
+        if (!data) throw new Error("The API server is unavailable. Please try again shortly.");
         if (!response.ok) throw new Error(data.error ?? "Registration failed");
         if (data.verificationRequired) return { verificationRequired: true, email: data.email };
         save({ token: data.token, user: { profile: { name: data.user.name, email: data.user.email }, role: data.user.role } });
