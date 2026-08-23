@@ -95,16 +95,13 @@ export default function AdminSettings() {
     setDirtyKeys(prev => new Set(prev).add(key));
   };
   const handleSave = async () => {
-    const changedSettings = Object.entries(form)
-      .filter(([key]) => dirtyKeys.has(key))
-      .map(([key, value]) => ({ key, value }));
-    if (changedSettings.length === 0) {
-      toast.success("Settings are already up to date");
-      return;
-    }
+    // Send the complete visible form instead of relying on dirtyKeys. This
+    // keeps a save authoritative even if a settings query rehydrates the
+    // form while the admin is editing.
+    const settingsToSave = Object.entries(form).map(([key, value]) => ({ key, value }));
     setSaving(true);
     try {
-      await setBulk({ settings: changedSettings });
+      await setBulk({ settings: settingsToSave });
       setDirtyKeys(new Set());
       toast.success("Settings saved successfully");
     } catch (e) {
