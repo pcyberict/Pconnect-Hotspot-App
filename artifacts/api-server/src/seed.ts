@@ -71,8 +71,37 @@ async function findOrCreateUser(email: string, name: string, role: "admin" | "us
 }
 
 export async function seed() {
-  const admin = await findOrCreateUser("admin@pconnect.local", "Pconnect Admin", "admin", "demo-user");
-  await findOrCreateUser("demo@pconnect.local", "Demo Customer", "user", "demo-customer");
+  const lockKey = 739184;
+  await pool.query("SELECT pg_advisory_lock($1)", [lockKey]);
+  try {
+    const alreadySeeded = await pool.query(
+      "SELECT 1 FROM pconnect_seed_state WHERE key = 'demo-data' LIMIT 1",
+    );
+    if (alreadySeeded.rowCount) {
+      console.log("Demo seed already completed; preserving existing database data.");
+      return;
+    }
+
+    // An existing database may predate the seed marker. Never add or update demo
+    // records in that database; record the marker and leave all user data intact.
+    const existingData = await pool.query(`
+      SELECT EXISTS (
+        SELECT 1 FROM pconnect_users
+        UNION ALL SELECT 1 FROM pconnect_voucher_plans
+        UNION ALL SELECT 1 FROM pconnect_vouchers
+        UNION ALL SELECT 1 FROM pconnect_site_settings
+      ) AS has_data
+    `);
+    if (existingData.rows[0]?.has_data) {
+      await pool.query(
+        "INSERT INTO pconnect_seed_state (key) VALUES ('demo-data') ON CONFLICT (key) DO NOTHING",
+      );
+      console.log("Existing database detected; skipped demo seed to preserve saved data.");
+      return;
+    }
+
+    const admin = await findOrCreateUser("admin@pconnect.local", "Pconnect Admin", "admin", "demo-user");
+    await findOrCreateUser("demo@pconnect.local", "Demo Customer", "user", "demo-customer");
 
   const planIds: string[] = [];
   for (const plan of plans) {
@@ -118,5 +147,11 @@ export async function seed() {
     );
   }
 
-  console.log(`Seeded ${plans.length} plans, ${plans.length * 3} demo vouchers, and demo users. Admin token: ${admin.token_identifier}`);
+    await pool.query(
+      "INSERT INTO pconnect_seed_state (key) VALUES ('demo-data') ON CONFLICT (key) DO NOTHING",
+    );
+    console.log(`Seeded ${plans.length} plans, ${plans.length * 3} demo vouchers, and demo users. Admin token: ${admin.token_identifier}`);
+  } finally {
+    await pool.query("SELECT pg_advisory_unlock($1)", [lockKey]);
+  }
 }

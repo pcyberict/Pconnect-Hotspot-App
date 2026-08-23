@@ -98,6 +98,10 @@ const schemaStatements = [
     key text NOT NULL,
     value text NOT NULL
   )`,
+  `CREATE TABLE IF NOT EXISTS pconnect_seed_state (
+    key text PRIMARY KEY,
+    seeded_at timestamptz NOT NULL DEFAULT now()
+  )`,
   `CREATE TABLE IF NOT EXISTS pconnect_notifications (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id uuid NOT NULL REFERENCES pconnect_users(id) ON DELETE CASCADE,
