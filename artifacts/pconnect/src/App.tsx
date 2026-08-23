@@ -37,6 +37,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminOverview />} />
@@ -55,7 +56,6 @@ export default function App() {
             <Route path="/purchases" element={<PurchasesPage />} />
             <Route path="/how-it-works" element={<ComingSoon />} />
             <Route path="/support" element={<ComingSoon />} />
-            <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/wallet" element={<WalletPage />} />
             <Route path="/profile" element={<Profile />} />
