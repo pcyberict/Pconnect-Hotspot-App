@@ -46,8 +46,8 @@ export default function AdminBonus() {
 
   return (
     <div className="mx-auto max-w-xl">
-      <div className="mb-6 text-center">
-        <div className="mx-auto mb-3 flex size-11 items-center justify-center rounded-2xl bg-[#df20ba]/20 text-pink-300">
+      <div className="mb-6">
+        <div className="mb-3 flex size-11 items-center justify-center rounded-2xl bg-[#df20ba]/20 text-pink-300">
           <Gift size={21} />
         </div>
         <h1 className="text-2xl font-bold text-white">Welcome Bonus</h1>
@@ -55,7 +55,7 @@ export default function AdminBonus() {
       </div>
 
       <div className="rounded-2xl border border-[#df20ba]/25 bg-gradient-to-br from-[#1a0b30]/90 to-[#160622]/90 p-6 shadow-[0_0_45px_rgba(223,32,186,0.08)]">
-        <div className="mb-6 flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-center sm:flex-row sm:items-start sm:text-left">
+        <div className="mb-6 flex items-start gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#7519e9]/20 text-purple-300"><Sparkles size={18} /></div>
           <div>
             <h2 className="font-semibold text-white">A warm welcome</h2>
@@ -90,7 +90,7 @@ export default function AdminBonus() {
           <p className="mt-2 text-xs text-white/35">This is credited once, after the user verifies their email.</p>
         </div>
 
-        <Button variant="glossy" className="mt-6 w-full sm:w-auto sm:mx-auto sm:flex" disabled={saving} onClick={() => void save()}>
+        <Button variant="glossy" className="mt-6 w-full sm:w-auto" disabled={saving} onClick={() => void save()}>
           <Save size={15} /> {saving ? "Saving…" : "Save bonus settings"}
         </Button>
       </div>
