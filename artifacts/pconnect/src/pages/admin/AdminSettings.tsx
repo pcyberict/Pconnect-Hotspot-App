@@ -66,10 +66,32 @@ export default function AdminSettings() {
   const setBulk = useMutation(api.siteSettings.setBulk);
   const manualFunding = useMutation(api.vouchers.manualFunding);
   const [form, setForm] = useState<SettingsForm>(DEFAULTS), [saving, setSaving] = useState(false), [tab, setTab] = useState<"general" | "payment" | "logos" | "funding">("general");
+  const [dirtyKeys, setDirtyKeys] = useState<Set<string>>(new Set());
   const [funding, setFunding] = useState({ userId: "", amount: "" }), [fundingSaving, setFundingSaving] = useState(false);
   useEffect(() => { if (settings) setForm({ ...DEFAULTS, ...settings }); }, [settings]);
-  const set = (key: string) => (value: string) => setForm(prev => ({ ...prev, [key]: value }));
-  const handleSave = async () => { setSaving(true); try { await setBulk({ settings: Object.entries(form).map(([key, value]) => ({ key, value })) }); toast.success("Settings saved successfully"); } catch (e) { toast.error(e instanceof Error ? e.message : "Error saving settings"); } finally { setSaving(false); } };
+  const set = (key: string) => (value: string) => {
+    setForm(prev => ({ ...prev, [key]: value }));
+    setDirtyKeys(prev => new Set(prev).add(key));
+  };
+  const handleSave = async () => {
+    const changedSettings = Object.entries(form)
+      .filter(([key]) => dirtyKeys.has(key))
+      .map(([key, value]) => ({ key, value }));
+    if (changedSettings.length === 0) {
+      toast.success("Settings are already up to date");
+      return;
+    }
+    setSaving(true);
+    try {
+      await setBulk({ settings: changedSettings });
+      setDirtyKeys(new Set());
+      toast.success("Settings saved successfully");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error saving settings");
+    } finally {
+      setSaving(false);
+    }
+  };
   const submitFunding = async () => {
     const amount = Number(funding.amount);
     if (!funding.userId || !Number.isFinite(amount) || amount <= 0) { toast.error("Select a user and enter a valid amount"); return; }
