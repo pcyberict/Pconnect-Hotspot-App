@@ -5,9 +5,10 @@ import { toast } from "sonner";
 import { api } from "@/lib/pconnect-api.ts";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { formatNaira } from "@/lib/plans.ts";
 import { useSiteName } from "@/lib/site-settings.ts";
+import { getRegistrationUrl } from "@/lib/auth-redirect.ts";
 import {
   Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent,
 } from "@/components/ui/empty.tsx";
@@ -202,13 +203,16 @@ function MyVouchersInner() {
 }
 
 export default function MyVouchersPage() {
+  const location = useLocation();
+  const registrationUrl = getRegistrationUrl(`${location.pathname}${location.search}${location.hash}`);
+
   return (
     <>
       <Authenticated><MyVouchersInner /></Authenticated>
       <Unauthenticated>
         <div className="flex min-h-[70vh] flex-col items-center justify-center gap-4 px-4 text-center">
           <h1 className="text-2xl font-bold">Sign in to view your vouchers</h1>
-          <Button asChild variant="glossy"><Link to="/login">Sign In / Register</Link></Button>
+          <Button asChild variant="glossy"><Link to={registrationUrl}>Create an Account</Link></Button>
         </div>
       </Unauthenticated>
       <AuthLoading>

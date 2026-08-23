@@ -1,9 +1,10 @@
 import { Bell, CheckCheck, CheckCircle2, Clock3, WalletCards } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Authenticated, Unauthenticated, useMutation, useQuery } from "@/lib/pconnect-api.ts";
 import { api } from "@/lib/pconnect-api.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { getRegistrationUrl } from "@/lib/auth-redirect.ts";
 
 type Notification = {
   _id: string;
@@ -113,13 +114,16 @@ function NotificationsInner() {
 }
 
 export default function NotificationsPage() {
+  const location = useLocation();
+  const registrationUrl = getRegistrationUrl(`${location.pathname}${location.search}${location.hash}`);
+
   return (
     <>
       <Authenticated><NotificationsInner /></Authenticated>
       <Unauthenticated>
         <div className="flex min-h-[70vh] flex-col items-center justify-center gap-4 px-4 text-center">
           <h1 className="text-2xl font-bold">Sign in to view notifications</h1>
-          <Button asChild variant="glossy"><Link to="/login">Sign In / Register</Link></Button>
+          <Button asChild variant="glossy"><Link to={registrationUrl}>Create an Account</Link></Button>
         </div>
       </Unauthenticated>
     </>

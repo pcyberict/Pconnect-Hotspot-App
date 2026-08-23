@@ -7,6 +7,7 @@ import SiteHeader from "@/components/site-header.tsx";
 import SiteFooter from "@/components/site-footer.tsx";
 import WhatsAppIcon from "@/components/whatsapp-icon.tsx";
 import { useSiteAsset, useSiteName } from "@/lib/site-settings.ts";
+import { getPostAuthDestination } from "@/lib/auth-redirect.ts";
 
 const DEFAULT_LOGIN_LOGO = "https://hercules-cdn.com/file_1A2LMz3Ezgh2isR7FfmjJfGQ";
 const BG_URL = "https://hercules-cdn.com/file_TQBDRwwJWEDIkSRlcLoUdqD1";
@@ -33,7 +34,7 @@ export default function Login() {
     try {
       if (tab === "login") await login(form.email, form.password);
       else await register(form.name, form.email, form.phone, form.password);
-      navigate("/dashboard", { replace: true });
+      navigate(getPostAuthDestination(searchParams.get("redirect")), { replace: true });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to continue");
     } finally {
@@ -46,7 +47,7 @@ export default function Login() {
       <SiteHeader />
 
       <div
-        className="flex-1 flex items-center justify-center bg-cover bg-center bg-no-repeat relative py-12"
+        className="flex-1 flex items-center justify-center overflow-hidden bg-cover bg-center bg-no-repeat relative py-12"
         style={{ backgroundImage: `url(${BG_URL})` }}
       >
         <div className="absolute inset-0 bg-black/40" />
@@ -59,8 +60,8 @@ export default function Login() {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="relative z-10 w-full max-w-md mx-4"
         >
-          <div className="rounded-2xl border border-white/15 bg-black/55 backdrop-blur-2xl shadow-[0_8px_80px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.08)] overflow-hidden">
-            <div className="flex flex-col items-center pt-8 pb-4 px-8">
+          <div className="w-full overflow-hidden rounded-2xl border border-white/15 bg-black/55 backdrop-blur-2xl shadow-[0_8px_80px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.08)]">
+            <div className="flex flex-col items-center px-5 pt-8 pb-4 sm:px-8">
               <img
                 src={loginLogo}
                 alt={siteName}
@@ -74,7 +75,7 @@ export default function Login() {
               </div>
             </div>
 
-            <div className="flex mx-8 mb-5 rounded-xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-sm">
+            <div className="mx-5 mb-5 flex overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm sm:mx-8">
               {(["login", "register"] as const).map((t) => (
                 <button
                   key={t}
@@ -90,10 +91,11 @@ export default function Login() {
               ))}
             </div>
 
-            <div className="px-8 pb-8">
+            <div className="px-5 pb-8 sm:px-8">
               <AnimatePresence mode="wait">
                 {tab === "login" ? (
-                  <motion.div
+                   <motion.div
+                     id="login"
                     key="login"
                     initial={{ opacity: 0, x: -16 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -126,7 +128,8 @@ export default function Login() {
                     </a>
                   </motion.div>
                 ) : (
-                  <motion.div
+                   <motion.div
+                     id="register"
                     key="register"
                     initial={{ opacity: 0, x: 16 }}
                     animate={{ opacity: 1, x: 0 }}

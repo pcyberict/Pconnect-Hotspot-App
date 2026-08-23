@@ -9,10 +9,11 @@ import { motion, AnimatePresence } from "motion/react";
 import { api } from "@/lib/pconnect-api.ts";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { formatNaira } from "@/lib/plans.ts";
 import { useAuth } from "@/hooks/use-auth.ts";
 import { useSiteAsset, useSiteName } from "@/lib/site-settings.ts";
+import { getRegistrationUrl } from "@/lib/auth-redirect.ts";
 
 const QUICK_AMOUNTS = [500, 1000, 2000, 5000];
 
@@ -533,13 +534,16 @@ function WalletInner() {
 }
 
 export default function WalletPage() {
+  const location = useLocation();
+  const registrationUrl = getRegistrationUrl(`${location.pathname}${location.search}${location.hash}`);
+
   return (
     <>
       <Authenticated><WalletInner /></Authenticated>
       <Unauthenticated>
         <div className="flex min-h-[70vh] flex-col items-center justify-center gap-4 px-4 text-center">
           <h1 className="text-2xl font-bold">Sign in to access your wallet</h1>
-          <Button asChild variant="glossy"><Link to="/login">Sign In / Register</Link></Button>
+           <Button asChild variant="glossy"><Link to={registrationUrl}>Create an Account</Link></Button>
         </div>
       </Unauthenticated>
       <AuthLoading>

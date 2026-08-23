@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Wifi, Crown, Zap, CheckCircle2, Copy, ExternalLink, ShoppingCart } from "lucide-react";
 import { api } from "@/lib/pconnect-api.ts";
 import { Button } from "@/components/ui/button.tsx";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -12,6 +12,7 @@ import {
 import { formatNaira } from "@/lib/plans.ts";
 import { FeatureIcon } from "@/pages/admin/AdminPlans.tsx";
 import { useSiteName } from "@/lib/site-settings.ts";
+import { getRegistrationUrl } from "@/lib/auth-redirect.ts";
 
 type Id<T extends string> = string;
 type PlanFeature = { icon: string; text: string };
@@ -275,6 +276,9 @@ function PlansInner() {
 }
 
 export default function PlansPage() {
+  const location = useLocation();
+  const registrationUrl = getRegistrationUrl(`${location.pathname}${location.search}${location.hash}`);
+
   return (
     <>
       <Authenticated><PlansInner /></Authenticated>
@@ -282,7 +286,7 @@ export default function PlansPage() {
         <div className="flex min-h-[70vh] flex-col items-center justify-center gap-4 px-4 text-center">
           <h1 className="text-2xl font-bold">Sign in to buy vouchers</h1>
           <p className="max-w-sm text-sm text-muted-foreground">You need an account and wallet balance to purchase voucher plans.</p>
-          <Button asChild variant="glossy"><Link to="/login">Sign In / Register</Link></Button>
+           <Button asChild variant="glossy"><Link to={registrationUrl}>Create an Account</Link></Button>
         </div>
       </Unauthenticated>
       <AuthLoading>

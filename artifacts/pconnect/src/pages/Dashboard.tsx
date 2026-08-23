@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Authenticated, Unauthenticated, AuthLoading } from "@/lib/pconnect-api.ts";
 import { useQuery } from "@/lib/pconnect-api.ts";
 import { Wallet, Ticket, Receipt, MessageCircle, ArrowRight } from "lucide-react";
@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useAuth } from "@/hooks/use-auth.ts";
 import { formatNaira } from "@/lib/plans.ts";
 import { WHATSAPP_GROUP_URL } from "@/lib/whatsapp.ts";
+import { getRegistrationUrl } from "@/lib/auth-redirect.ts";
 
 function DashboardInner() {
   const { user } = useAuth();
@@ -83,6 +84,9 @@ function DashboardInner() {
 }
 
 export default function Dashboard() {
+  const location = useLocation();
+  const registrationUrl = getRegistrationUrl(`${location.pathname}${location.search}${location.hash}`);
+
   return (
     <>
       <Authenticated>
@@ -95,7 +99,7 @@ export default function Dashboard() {
             You need an account to see your wallet balance and vouchers.
           </p>
           <Button asChild variant="glossy">
-            <Link to="/login">Sign In / Register</Link>
+             <Link to={registrationUrl}>Create an Account</Link>
           </Button>
         </div>
       </Unauthenticated>
