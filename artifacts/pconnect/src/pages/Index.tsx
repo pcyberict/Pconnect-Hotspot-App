@@ -76,10 +76,9 @@ const FAQS = [
   { q: "How does the referral programme work?", a: "Share your personal referral link with friends. When someone signs up through your link and makes their first successful deposit, you earn a referral commission in your wallet." },
 ];
 
-function FaqItem({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
+function FaqItem({ q, a, open, onToggle }: { q: string; a: string; open: boolean; onToggle: () => void }) {
   return (
-    <div className="cursor-pointer overflow-hidden rounded-2xl border border-[#7519e9]/25 bg-[#23103e]/60" onClick={() => setOpen(!open)}>
+    <div className="cursor-pointer overflow-hidden rounded-2xl border border-[#7519e9]/25 bg-[#23103e]/60" onClick={onToggle}>
       <div className="flex items-center justify-between p-5">
         <span className="pr-4 text-sm leading-snug font-semibold text-white">{q}</span>
         {open ? <ChevronUp size={18} className="shrink-0 text-purple-400" /> : <ChevronDown size={18} className="shrink-0 text-white/50" />}
@@ -99,6 +98,7 @@ export default function Index() {
   const purchaseVoucher = useMutation(api.vouchers.purchaseVoucher);
   const [buyingPlan, setBuyingPlan] = useState<string | null>(null);
   const [purchaseResult, setPurchaseResult] = useState<PurchaseResult | null>(null);
+  const [openFaq, setOpenFaq] = useState<string | null>(null);
   const buyVouchersUrl = isAuthenticated ? "/plans" : getRegistrationUrl("/plans");
   const fundWalletUrl = isAuthenticated ? "/wallet" : getRegistrationUrl("/wallet");
 
@@ -294,7 +294,15 @@ export default function Index() {
           <h2 className="mb-2 text-center text-2xl font-bold text-white md:text-3xl">Frequently Asked{" "}<span className="bg-gradient-to-r from-[#7519e9] to-[#df20ba] bg-clip-text text-transparent">Questions</span></h2>
           <p className="mb-10 text-center text-sm text-white/50">Everything you need to know</p>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {FAQS.map((faq) => (<FaqItem key={faq.q} q={faq.q} a={faq.a} />))}
+            {FAQS.map((faq) => (
+              <FaqItem
+                key={faq.q}
+                q={faq.q}
+                a={faq.a}
+                open={openFaq === faq.q}
+                onToggle={() => setOpenFaq((current) => current === faq.q ? null : faq.q)}
+              />
+            ))}
           </div>
         </div>
       </section>
