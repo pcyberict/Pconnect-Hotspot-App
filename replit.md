@@ -41,6 +41,7 @@ Users can browse plans, fund a wallet, buy vouchers, view purchase history, and 
 ## User preferences
 
 Keep the current Primzy Connect screens and visual language while replacing persistence integrations.
+- Use the purple-tinted `#23103e` background across all pages, including admin pages and any future pages; avoid black page backgrounds.
 
 ## Gotchas
 
