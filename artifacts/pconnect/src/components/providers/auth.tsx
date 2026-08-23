@@ -8,7 +8,7 @@ const AuthContext = createContext<{
   signinRedirect: () => Promise<void>;
   signout: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, phone: string, password: string) => Promise<void>;
+  register: (name: string, email: string, phone: string, password: string) => Promise<{ verificationRequired: boolean; email: string }>;
 }>({
   user: null,
   isAuthenticated: false,
@@ -16,7 +16,7 @@ const AuthContext = createContext<{
   signinRedirect: async () => {},
   signout: async () => {},
   login: async () => {},
-  register: async () => {},
+  register: async () => ({ verificationRequired: false, email: "" }),
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -47,7 +47,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const response = await fetch("/api/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email, phone, password }) });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error ?? "Registration failed");
+        if (data.verificationRequired) return { verificationRequired: true, email: data.email };
         save({ token: data.token, user: { profile: { name: data.user.name, email: data.user.email }, role: data.user.role } });
+        return { verificationRequired: false, email };
       },
       signout: async () => { localStorage.removeItem("pconnect-token"); localStorage.removeItem("pconnect-user"); setSession(null); },
     };

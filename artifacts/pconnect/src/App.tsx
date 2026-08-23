@@ -22,6 +22,8 @@ import Profile from "./pages/Profile.tsx";
 import NotificationsPage from "./pages/Notifications.tsx";
 import ComingSoon from "./pages/ComingSoon.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import ForgotPassword from "./pages/ForgotPassword.tsx";
+import ResetPassword from "./pages/ResetPassword.tsx";
 
 export default function App() {
   return (
@@ -30,6 +32,8 @@ export default function App() {
         <Routes>
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminOverview />} />

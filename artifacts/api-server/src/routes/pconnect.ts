@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { pool } from "@workspace/db";
-import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, randomInt, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
+import { emailLayout, sendEmail } from "../lib/mailer";
 
 const router = Router();
 const tokenFor = (req: { headers: Record<string, string | string[] | undefined> }) =>
@@ -32,6 +33,14 @@ function passwordMatches(password: string, stored: string | null | undefined) {
   return timingSafeEqual(derived, Buffer.from(hash, "hex"));
 }
 
+function hashValue(value: string) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+function otpCode() {
+  return String(randomInt(100000, 1000000));
+}
+
 function databaseErrorMessage(error: unknown) {
   const message = error instanceof Error ? error.message : "";
   return /relation .* does not exist|database .* does not exist|schema .* does not exist/i.test(message)
@@ -48,19 +57,93 @@ router.post("/auth/register", async (req, res) => {
     return res.status(400).json({ error: "Name, email, and a password of at least 6 characters are required" });
   }
   try {
-    const token = randomUUID();
-    const result = await pool.query(`INSERT INTO pconnect_users
-      (token_identifier,name,email,phone,password_hash,role)
-      VALUES ($1,$2,$3,$4,$5,'user') RETURNING *`,
-      [token, name, email, phone || null, passwordHash(password)]);
-    await pool.query("INSERT INTO pconnect_wallets (user_id,balance) VALUES ($1,0)", [result.rows[0].id]);
-    return res.status(201).json({ token, user: publicUser(result.rows[0]) });
+    const existing = await pool.query("SELECT id FROM pconnect_users WHERE lower(email)=lower($1) LIMIT 1", [email]);
+    if (existing.rows[0]) return res.status(409).json({ error: "An account with this email already exists" });
+    const code = otpCode();
+    await pool.query("DELETE FROM pconnect_email_verification_tokens WHERE lower(email)=lower($1)", [email]);
+    await pool.query(`INSERT INTO pconnect_email_verification_tokens
+      (email,name,phone,password_hash,code_hash,expires_at) VALUES ($1,$2,$3,$4,$5,now()+interval '10 minutes')`,
+      [email, name, phone || null, passwordHash(password), hashValue(code)]);
+    await sendEmail(email, "Your registration verification code", emailLayout("Verify your email", `<p>Enter this code to complete your registration:</p><p style="font-size:28px;font-weight:bold;letter-spacing:8px">${code}</p><p>This code expires in 10 minutes.</p>`));
+    return res.status(202).json({ verificationRequired: true, email });
   } catch (error) {
     if (error instanceof Error && error.message.includes("duplicate")) {
       return res.status(409).json({ error: "An account with this email already exists" });
     }
     return res.status(503).json({ error: databaseErrorMessage(error) });
   }
+});
+
+router.post("/auth/register/verify", async (req, res) => {
+  const email = String(req.body?.email ?? "").trim().toLowerCase();
+  const code = String(req.body?.code ?? "").trim();
+  if (!email || !/^\d{6}$/.test(code)) return res.status(400).json({ error: "Enter the 6-digit code sent to your email" });
+  try {
+    const pending = (await pool.query(
+      "SELECT * FROM pconnect_email_verification_tokens WHERE lower(email)=lower($1) AND expires_at > now() ORDER BY created_at DESC LIMIT 1", [email],
+    )).rows[0];
+    if (!pending || pending.code_hash !== hashValue(code)) return res.status(400).json({ error: "That verification code is invalid or expired" });
+    const token = randomUUID();
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const result = await client.query(`INSERT INTO pconnect_users
+        (token_identifier,name,email,phone,password_hash,role,email_verified)
+        VALUES ($1,$2,$3,$4,$5,'user',true) RETURNING *`,
+        [token, pending.name, pending.email, pending.phone, pending.password_hash]);
+      await client.query("INSERT INTO pconnect_wallets (user_id,balance) VALUES ($1,0)", [result.rows[0].id]);
+      await client.query("DELETE FROM pconnect_email_verification_tokens WHERE email=$1", [email]);
+      await client.query("COMMIT");
+      return res.status(201).json({ token, user: publicUser(result.rows[0]) });
+    } catch (error) {
+      await client.query("ROLLBACK");
+      if (error instanceof Error && error.message.includes("duplicate")) return res.status(409).json({ error: "An account with this email already exists" });
+      throw error;
+    } finally { client.release(); }
+  } catch (error) {
+    return res.status(503).json({ error: databaseErrorMessage(error) });
+  }
+});
+
+router.post("/auth/forgot-password", async (req, res) => {
+  const email = String(req.body?.email ?? "").trim().toLowerCase();
+  if (!email) return res.status(400).json({ error: "Email is required" });
+  try {
+    const user = (await pool.query("SELECT id, name FROM pconnect_users WHERE lower(email)=lower($1) LIMIT 1", [email])).rows[0];
+    if (user) {
+      const rawToken = randomBytes(32).toString("hex");
+      await pool.query("UPDATE pconnect_password_reset_tokens SET used_at=now() WHERE user_id=$1 AND used_at IS NULL", [user.id]);
+      await pool.query(`INSERT INTO pconnect_password_reset_tokens (user_id,token_hash,expires_at)
+        VALUES ($1,$2,now()+interval '24 hours')`, [user.id, hashValue(rawToken)]);
+      const origin = typeof req.headers.origin === "string" ? req.headers.origin : `${req.protocol}://${req.get("host")}`;
+      const link = `${origin}/reset-password?token=${encodeURIComponent(rawToken)}`;
+      await sendEmail(email, "Reset your password", emailLayout("Reset your password", `<p>Hello ${String(user.name ?? "there")},</p><p>Use the link below to choose a new password. It expires in 24 hours and can only be used once.</p><p><a href="${link}">Reset password</a></p>`));
+    }
+    return res.json({ message: "If an account exists for that email, a password reset link has been sent." });
+  } catch (error) {
+    return res.status(503).json({ error: error instanceof Error ? error.message : "Unable to send reset email" });
+  }
+});
+
+router.post("/auth/reset-password", async (req, res) => {
+  const token = String(req.body?.token ?? "");
+  const newPassword = String(req.body?.password ?? "");
+  if (!token || newPassword.length < 6) return res.status(400).json({ error: "A valid reset token and password of at least 6 characters are required" });
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const reset = (await client.query(`SELECT id,user_id FROM pconnect_password_reset_tokens
+      WHERE token_hash=$1 AND used_at IS NULL AND expires_at > now() FOR UPDATE`, [hashValue(token)])).rows[0];
+    if (!reset) { await client.query("ROLLBACK"); return res.status(400).json({ error: "That reset link is invalid, expired, or already used" }); }
+    await client.query("UPDATE pconnect_users SET password_hash=$1 WHERE id=$2", [passwordHash(newPassword), reset.user_id]);
+    await client.query("UPDATE pconnect_password_reset_tokens SET used_at=now() WHERE id=$1", [reset.id]);
+    await client.query("UPDATE pconnect_users SET token_identifier=$1 WHERE id=$2", [randomUUID(), reset.user_id]);
+    await client.query("COMMIT");
+    return res.json({ ok: true });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    return res.status(503).json({ error: databaseErrorMessage(error) });
+  } finally { client.release(); }
 });
 
 router.post("/auth/login", async (req, res) => {
@@ -542,8 +625,12 @@ router.get("/admin/inventory", async (_req, res) => {
 
 router.get("/settings", async (req, res) => {
   const result = await pool.query("SELECT key, value FROM pconnect_site_settings");
-  if (typeof req.query.key === "string") return res.json(result.rows.find((row) => row.key === req.query.key)?.value ?? null);
-  return res.json(Object.fromEntries(result.rows.map((row) => [row.key, row.value])));
+  const hidden = new Set(["smtp_password", "flutterwave_secret_key", "flutterwave_webhook_hash"]);
+  if (typeof req.query.key === "string") {
+    if (hidden.has(req.query.key)) return res.json(null);
+    return res.json(result.rows.find((row) => row.key === req.query.key)?.value ?? null);
+  }
+  return res.json(Object.fromEntries(result.rows.filter((row) => !hidden.has(row.key)).map((row) => [row.key, row.value])));
 });
 
 router.get("/settings/public-key", async (_req, res) => {
@@ -552,13 +639,17 @@ router.get("/settings/public-key", async (_req, res) => {
 });
 
 router.get("/settings/masked", async (req, res) => {
+  const user = await currentUser(tokenFor(req));
+  if (!user || user.role !== "admin") return res.status(403).json({ error: "Admins only" });
   const key = String(req.query.key ?? "");
   const result = await pool.query("SELECT value FROM pconnect_site_settings WHERE key=$1", [key]);
   const value = result.rows[0]?.value as string | undefined;
-  res.json(value ? `${value.slice(0, 4)}${"*".repeat(Math.max(0, value.length - 8))}${value.slice(-4)}` : null);
+  return res.json(value ? `${value.slice(0, 4)}${"*".repeat(Math.max(0, value.length - 8))}${value.slice(-4)}` : null);
 });
 
 router.post("/settings", async (req, res) => {
+  const user = await currentUser(tokenFor(req));
+  if (!user || user.role !== "admin") return res.status(403).json({ error: "Admins only" });
   const settings = Array.isArray(req.body?.settings) ? req.body.settings : [];
   for (const setting of settings) {
     await pool.query(`INSERT INTO pconnect_site_settings (key,value) VALUES ($1,$2)
@@ -568,6 +659,8 @@ router.post("/settings", async (req, res) => {
 });
 
 router.post("/settings/secret", async (req, res) => {
+  const user = await currentUser(tokenFor(req));
+  if (!user || user.role !== "admin") return res.status(403).json({ error: "Admins only" });
   if (!req.body?.key || !req.body?.value) return res.status(400).json({ error: "Key and value are required" });
   await pool.query(`INSERT INTO pconnect_site_settings (key,value) VALUES ($1,$2)
     ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value`, [req.body.key, req.body.value]);

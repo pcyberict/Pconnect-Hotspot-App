@@ -30,7 +30,26 @@ const schemaStatements = [
     email text,
     phone text,
     password_hash text,
+    email_verified boolean NOT NULL DEFAULT false,
     role pconnect_user_role NOT NULL DEFAULT 'user',
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`,
+  `CREATE TABLE IF NOT EXISTS pconnect_email_verification_tokens (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    email text NOT NULL,
+    name text NOT NULL,
+    phone text,
+    password_hash text NOT NULL,
+    code_hash text NOT NULL,
+    expires_at timestamptz NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`,
+  `CREATE TABLE IF NOT EXISTS pconnect_password_reset_tokens (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid NOT NULL REFERENCES pconnect_users(id) ON DELETE CASCADE,
+    token_hash text NOT NULL,
+    expires_at timestamptz NOT NULL,
+    used_at timestamptz,
     created_at timestamptz NOT NULL DEFAULT now()
   )`,
   `CREATE TABLE IF NOT EXISTS pconnect_wallets (
@@ -115,6 +134,7 @@ const schemaStatements = [
   // ADD COLUMN IF NOT EXISTS is deliberately non-destructive.
   `ALTER TABLE pconnect_users ADD COLUMN IF NOT EXISTS phone text`,
   `ALTER TABLE pconnect_users ADD COLUMN IF NOT EXISTS password_hash text`,
+  `ALTER TABLE pconnect_users ADD COLUMN IF NOT EXISTS email_verified boolean NOT NULL DEFAULT false`,
   `ALTER TABLE pconnect_voucher_plans ADD COLUMN IF NOT EXISTS data_limit text`,
   `ALTER TABLE pconnect_voucher_plans ADD COLUMN IF NOT EXISTS description text`,
   `ALTER TABLE pconnect_voucher_plans ADD COLUMN IF NOT EXISTS features jsonb`,
