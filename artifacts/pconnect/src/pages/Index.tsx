@@ -115,7 +115,7 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-[#10051f]">
+    <div className="bg-[#10051f]">
       <section className="relative flex min-h-[60vh] items-center justify-center overflow-hidden md:min-h-[80vh]">
         <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${heroUrl})` }} />
         <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(16,5,31,0.75) 0%, rgba(16,5,31,0.5) 50%, rgba(16,5,31,0.95) 100%)" }} />
