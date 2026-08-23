@@ -23,9 +23,10 @@ export default function SiteHeader() {
   const { isAuthenticated } = useConvexAuth();
   const { signout } = useAuth();
   const me = useQuery(api.users.getCurrentUser, isAuthenticated ? {} : "skip");
-  const notifications = useQuery<{ items: { id: string }[]; unreadCount: number }>(api.notifications.listMine, isAuthenticated ? {} : "skip");
+  const notifications = useQuery<{ items: { id: string; readAt?: string | null }[]; unreadCount: number }>(api.notifications.listMine, isAuthenticated ? {} : "skip");
   const isAdmin = me?.role === "admin";
   const unreadCount = notifications?.unreadCount ?? 0;
+  const hasNotifications = (notifications?.items.length ?? 0) > 0;
 
   const handleSignOut = () => {
     void signout();
@@ -54,17 +55,19 @@ export default function SiteHeader() {
         </nav>
         <div className="hidden items-center gap-3 lg:flex">
           <Authenticated>
-            <Link
+              <Link
               to="/notifications"
               aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : "Notifications"}
               className="relative rounded-xl p-2.5 text-white transition-colors hover:bg-white/5 hover:text-[#df20ba]"
             >
               <Bell size={19} />
-              {unreadCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-[#df20ba] px-1 text-[10px] font-bold leading-4 text-white">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              )}
+                {hasNotifications ? (
+                  <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-[#df20ba] px-1 text-[10px] font-bold leading-4 text-white">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                ) : (
+                  <span className="absolute right-0 top-0 size-2 animate-pulse rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.9)]" aria-hidden="true" />
+                )}
             </Link>
             <Button asChild variant="secondary"><Link to="/dashboard">Dashboard</Link></Button>
             {isAdmin && (
@@ -82,7 +85,7 @@ export default function SiteHeader() {
           </Unauthenticated>
           <AuthLoading><Skeleton className="h-9 w-24" /></AuthLoading>
         </div>
-        <div className="ml-auto flex items-center gap-0 lg:hidden">
+        <div className="ml-auto flex items-center gap-2 lg:hidden">
           <Authenticated>
             <Link
               to="/notifications"
@@ -90,11 +93,13 @@ export default function SiteHeader() {
               className="relative rounded-xl p-2 text-white transition-colors hover:bg-white/5 hover:text-[#df20ba]"
             >
               <Bell size={20} />
-              {unreadCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-[#df20ba] px-1 text-[10px] font-bold leading-4 text-white">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              )}
+                {hasNotifications ? (
+                  <span className="absolute -right-0.5 -top-0.5 flex min-w-4 items-center justify-center rounded-full bg-[#df20ba] px-1 text-[10px] font-bold leading-4 text-white">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                ) : (
+                  <span className="absolute right-0 top-0 size-2 animate-pulse rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.9)]" aria-hidden="true" />
+                )}
             </Link>
           </Authenticated>
           <button
