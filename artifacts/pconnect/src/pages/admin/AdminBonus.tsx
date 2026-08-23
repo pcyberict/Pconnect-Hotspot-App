@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Gift, Save, Sparkles } from "lucide-react";
+import { Save } from "lucide-react";
 import { toast } from "sonner";
 import { api, useMutation, useQuery } from "@/lib/pconnect-api.ts";
 import { Button } from "@/components/ui/button.tsx";
@@ -45,22 +45,16 @@ export default function AdminBonus() {
   }
 
   return (
-    <div className="mx-auto max-w-xl">
+    <div className="max-w-3xl">
       <div className="mb-6">
-        <div className="mb-3 flex size-11 items-center justify-center rounded-2xl bg-[#df20ba]/20 text-pink-300">
-          <Gift size={21} />
-        </div>
         <h1 className="text-2xl font-bold text-white">Welcome Bonus</h1>
         <p className="mt-1 text-sm text-white/40">Give new users a little head start when they create an account.</p>
       </div>
 
-      <div className="rounded-2xl border border-[#df20ba]/25 bg-gradient-to-br from-[#1a0b30]/90 to-[#160622]/90 p-6 shadow-[0_0_45px_rgba(223,32,186,0.08)]">
-        <div className="mb-6 flex items-start gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#7519e9]/20 text-purple-300"><Sparkles size={18} /></div>
-          <div>
-            <h2 className="font-semibold text-white">A warm welcome</h2>
-            <p className="mt-1 text-sm leading-6 text-white/45">When active, verified signups receive this amount in their wallet, an in-app notification, and a short welcome email.</p>
-          </div>
+      <div className="rounded-2xl border border-white/10 bg-[#1a0b30]/60 p-5">
+        <div className="mb-5 border-b border-white/10 pb-4">
+          <h2 className="font-semibold text-white">Welcome bonus settings</h2>
+          <p className="mt-1 text-sm leading-6 text-white/45">When active, verified signups receive this amount in their wallet, an in-app notification, and a short welcome email.</p>
         </div>
 
         <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
