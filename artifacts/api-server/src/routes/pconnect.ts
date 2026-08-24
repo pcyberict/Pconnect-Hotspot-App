@@ -120,6 +120,7 @@ async function createFlutterwaveVirtualAccount(user: Record<string, unknown>, id
       phonenumber: user.phone ?? undefined,
       tx_ref: `pconnect-va-${user.id}`,
       is_permanent: true,
+      narration: String(user.name ?? "Pconnect Customer").trim().slice(0, 35),
       [identityType]: identityNumber,
     }),
   });
