@@ -124,15 +124,7 @@ function WalletInner() {
     if (!publicKey) { toast.error("Flutterwave not configured yet. Contact admin."); return; }
     if (!scriptLoaded) { toast.error("Payment widget still loading. Try again."); return; }
     setPreparingCard(true);
-    let reference = "";
-    try {
-      const result = await createPending({ amount: parsedAmount });
-      reference = result.reference;
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed");
-      setPreparingCard(false);
-      return;
-    }
+    const reference = `pcc-${globalThis.crypto.randomUUID()}`;
     window.FlutterwaveCheckout({
       public_key: publicKey,
       tx_ref: reference,
@@ -143,7 +135,8 @@ function WalletInner() {
       callback: (response) => {
         if (response.status === "successful") {
           toast.loading("Verifying payment…", { id: "verify" });
-          void verifyDeposit({ reference: response.tx_ref, providerTransactionId: String(response.transaction_id) })
+          void createPending({ amount: parsedAmount, reference: response.tx_ref || reference })
+            .then((pending) => verifyDeposit({ reference: pending.reference, providerTransactionId: String(response.transaction_id) }))
             .then((res) => {
               if (res.status === "successful") {
                 toast.success("Wallet funded successfully!", { id: "verify" });
@@ -154,7 +147,7 @@ function WalletInner() {
             })
             .catch(() => toast.error("Verification error. Contact support if amount was deducted.", { id: "verify" }));
         } else {
-          toast.error("Payment was not completed.");
+          toast.info("Payment was not completed. No wallet funding was recorded.");
         }
         setPreparingCard(false);
       },

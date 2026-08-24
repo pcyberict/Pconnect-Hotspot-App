@@ -839,7 +839,9 @@ router.post("/deposits", async (req, res) => {
   if (!Number.isFinite(amount) || amount < 100 || amount > 500000) return res.status(400).json({ error: "Enter an amount between ₦100 and ₦500,000" });
   const wallet = (await pool.query("SELECT * FROM pconnect_wallets WHERE user_id = $1", [user.id])).rows[0];
   if (!wallet) return res.status(404).json({ error: "Wallet not found" });
-  const reference = `pcc-${randomUUID()}`;
+  const requestedReference = String(req.body?.reference ?? "").trim();
+  const reference = requestedReference || `pcc-${randomUUID()}`;
+  if (!/^pcc-[A-Za-z0-9_-]+$/.test(reference)) return res.status(400).json({ error: "Invalid payment reference" });
   await pool.query(`INSERT INTO pconnect_wallet_transactions
     (user_id,wallet_id,type,amount,previous_balance,new_balance,status,reference,provider,description)
     VALUES ($1,$2,'deposit',$3,$4,$4,'pending',$5,'flutterwave','Wallet funding via Flutterwave')`,
