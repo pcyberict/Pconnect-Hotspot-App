@@ -28,10 +28,12 @@ import NotFound from "./pages/NotFound.tsx";
 import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import Referrals from "./pages/Referrals.tsx";
+import CustomCodeInjector from "./components/custom-code-injector.tsx";
 
 export default function App() {
   return (
     <DefaultProviders>
+      <CustomCodeInjector />
       <BrowserRouter>
         <Routes>
           <Route path="/auth/callback" element={<AuthCallback />} />
