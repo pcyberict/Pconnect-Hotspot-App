@@ -111,7 +111,7 @@ On the first startup, the API automatically:
 - Creates the Pconnect PostgreSQL tables
 - Creates the required PostgreSQL enum types
 - Creates the database indexes
-- Inserts the demo plans, vouchers, users, and settings
+- On the first startup only, inserts the demo plans, vouchers, users, and settings when the database is empty
 - Starts accepting web and API requests
 
 The startup log should include:

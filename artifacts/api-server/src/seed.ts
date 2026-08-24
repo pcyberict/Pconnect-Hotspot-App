@@ -72,6 +72,50 @@ export async function seed() {
   const lockKey = 739184;
   await pool.query("SELECT pg_advisory_lock($1)", [lockKey]);
   try {
+    const state = (await pool.query(
+      `SELECT
+         EXISTS (
+           SELECT 1
+           FROM pconnect_seed_state
+           WHERE key = 'demo-data'
+         ) AS "seedRecorded",
+         EXISTS (
+           SELECT 1 FROM pconnect_users
+           UNION ALL
+           SELECT 1 FROM pconnect_voucher_plans
+           UNION ALL
+           SELECT 1 FROM pconnect_vouchers
+           UNION ALL
+           SELECT 1 FROM pconnect_wallets
+           UNION ALL
+           SELECT 1 FROM pconnect_wallet_transactions
+           UNION ALL
+           SELECT 1 FROM pconnect_referrals
+           UNION ALL
+           SELECT 1 FROM pconnect_purchases
+           UNION ALL
+           SELECT 1 FROM pconnect_site_settings
+           UNION ALL
+           SELECT 1 FROM pconnect_email_verification_tokens
+           UNION ALL
+           SELECT 1 FROM pconnect_password_reset_tokens
+           UNION ALL
+           SELECT 1 FROM pconnect_notifications
+         ) AS "hasData"`,
+    )).rows[0] as { seedRecorded: boolean; hasData: boolean };
+
+    if (state.seedRecorded || state.hasData) {
+      await pool.query(
+        "INSERT INTO pconnect_seed_state (key) VALUES ('demo-data') ON CONFLICT (key) DO NOTHING",
+      );
+      console.log(
+        state.seedRecorded
+          ? "Demo data seed already completed; skipping."
+          : "Database is not empty; recording seed as initialized and skipping demo data.",
+      );
+      return;
+    }
+
     const admin = await findOrCreateUser("admin@pconnect.local", "Pconnect Admin", "admin", "demo-user");
     await findOrCreateUser("demo@pconnect.local", "Demo Customer", "user", "demo-customer");
 

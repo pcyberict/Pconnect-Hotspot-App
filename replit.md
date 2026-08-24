@@ -13,7 +13,7 @@ Primzy Connect sells hotspot internet vouchers, manages wallet deposits, and pro
 - Weekly reports are sent to every admin email on Mondays; monthly reports are sent on the first day of each month. Both use the configured SMTP settings and include revenue less welcome bonuses and referral commissions.
 - Required env: `DATABASE_URL` — the provisioned PostgreSQL connection string
 - Demo session: the web app uses the `demo-user` token; the seeded demo admin has a ₦2,500 wallet balance.
-- The combined Docker deployment bootstraps the PostgreSQL schema and idempotent demo data before starting the API.
+- The combined Docker deployment bootstraps the PostgreSQL schema before starting the API. Demo data is seeded only once, on the first startup against an empty database; later deploys never recreate deleted demo records.
 
 ## Stack
 
