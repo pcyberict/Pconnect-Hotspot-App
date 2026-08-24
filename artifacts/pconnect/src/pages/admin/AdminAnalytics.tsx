@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { CalendarDays, Download, Filter, LineChart, RefreshCw, Users, ShoppingCart, Gift, WalletCards, UserRound, TrendingUp } from "lucide-react";
 import { CartesianGrid, Line, LineChart as RechartsLineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subMonths } from "date-fns";
@@ -34,15 +35,22 @@ function Metric({ label, value, hint, icon: Icon, accent = "text-purple-300" }: 
 }
 
 export default function AdminAnalytics() {
-  const [preset, setPreset] = useState("thisMonth");
-  const [range, setRange] = useState<DateRange>(() => datesFor("thisMonth"));
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedPreset = searchParams.get("preset");
+  const preset = presets.some(([value]) => value === requestedPreset) ? requestedPreset! : "thisMonth";
+  const [range, setRange] = useState<DateRange>(() => datesFor(preset));
   const [calendarOpen, setCalendarOpen] = useState(false);
+  useEffect(() => {
+    if (preset !== "custom") setRange(datesFor(preset));
+  }, [preset]);
   const args = useMemo(() => ({ from: range.from ? format(range.from, "yyyy-MM-dd") : undefined, to: range.to ? format(range.to, "yyyy-MM-dd") : undefined }), [range]);
   const analytics = useQuery<any>(api.analytics.getAdmin, args);
   const s = analytics?.summary;
 
   function applyPreset(value: string) {
-    setPreset(value);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set("preset", value);
+    setSearchParams(nextParams, { replace: true });
     if (value !== "custom") setRange(datesFor(value));
   }
 
@@ -65,7 +73,7 @@ export default function AdminAnalytics() {
       <div><div className="flex items-center gap-2"><LineChart className="text-[#df20ba]" size={22} /><h1 className="text-2xl font-bold text-white">Analytics</h1></div><p className="mt-1 text-sm text-white/40">Understand revenue, incentives, and wallet exposure.</p></div>
       <div className="flex flex-wrap gap-2"><Button variant="outline" className="border-white/15 bg-white/5 text-white hover:bg-white/10" onClick={exportCsv}><Download size={15} /> Export CSV</Button><Button variant="glossy" onClick={() => setRange({ ...range })}><RefreshCw size={15} /> Refresh</Button></div>
     </div>
-    <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-[#1a0b30]/60 p-3"><Filter size={16} className="ml-1 text-white/40" />{presets.map(([value, label]) => <button key={value} onClick={() => applyPreset(value)} className={`rounded-lg px-3 py-2 text-xs font-medium transition ${preset === value ? "bg-[#7519e9] text-white" : "text-white/55 hover:bg-white/10 hover:text-white"}`}>{label}</button>)}<Popover open={calendarOpen} onOpenChange={setCalendarOpen}><PopoverTrigger asChild><Button variant="outline" className="ml-auto border-white/15 bg-white/5 text-xs text-white hover:bg-white/10"><CalendarDays size={15} />{range.from ? `${format(range.from, "MMM d")} – ${range.to ? format(range.to, "MMM d, yyyy") : "…"}` : "Choose dates"}</Button></PopoverTrigger><PopoverContent className="w-auto border-white/10 bg-[#1a0b30] p-0 text-white" align="end"><Calendar mode="range" selected={range.from ? { from: range.from, to: range.to } as CalendarDateRange : undefined} onSelect={(value) => { setPreset("custom"); setRange(value ? { from: value.from, to: value.to } : {}); if (value?.from && value.to) setCalendarOpen(false); }} numberOfMonths={2} /></PopoverContent></Popover></div>
+     <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-[#1a0b30]/60 p-3"><Filter size={16} className="ml-1 text-white/40" />{presets.map(([value, label]) => <button key={value} id={`analytics-tab-${value}`} onClick={() => applyPreset(value)} aria-selected={preset === value} className={`rounded-lg px-3 py-2 text-xs font-medium transition ${preset === value ? "bg-[#7519e9] text-white" : "text-white/55 hover:bg-white/10 hover:text-white"}`}>{label}</button>)}<Popover open={calendarOpen} onOpenChange={setCalendarOpen}><PopoverTrigger asChild><Button variant="outline" className="ml-auto border-white/15 bg-white/5 text-xs text-white hover:bg-white/10"><CalendarDays size={15} />{range.from ? `${format(range.from, "MMM d")} – ${range.to ? format(range.to, "MMM d, yyyy") : "…"}` : "Choose dates"}</Button></PopoverTrigger><PopoverContent className="w-auto border-white/10 bg-[#1a0b30] p-0 text-white" align="end"><Calendar mode="range" selected={range.from ? { from: range.from, to: range.to } as CalendarDateRange : undefined} onSelect={(value) => { applyPreset("custom"); setRange(value ? { from: value.from, to: value.to } : {}); if (value?.from && value.to) setCalendarOpen(false); }} numberOfMonths={2} /></PopoverContent></Popover></div>
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Metric label="Purchase revenue" value={money(s.purchaseRevenue)} hint={`${s.totalPurchases.toLocaleString()} completed purchases`} icon={TrendingUp} accent="text-emerald-400" /><Metric label="Net generated" value={money(s.netGenerated)} hint="After bonus + referral commissions" icon={WalletCards} accent="text-[#df20ba]" /><Metric label="New users" value={s.totalUsers.toLocaleString()} icon={Users} /><Metric label="Unused wallet funds" value={money(s.unusedFunds)} hint="Current customer balances" icon={WalletCards} accent="text-amber-300" /></div>
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Metric label="Welcome bonus" value={money(s.welcomeBonus)} hint="Distributed in selected period" icon={Gift} accent="text-pink-300" /><Metric label="Referral commissions" value={money(s.referralCommissions)} hint="Credited in selected period" icon={UserRound} accent="text-orange-300" /><Metric label="After welcome bonus" value={money(s.netAfterBonus)} icon={ShoppingCart} /><Metric label="Average purchase" value={money(s.averagePurchase)} icon={LineChart} /></div>
     <section className="rounded-2xl border border-white/10 bg-[#1a0b30]/80 p-4 sm:p-6"><div className="mb-5 flex items-center justify-between"><div><h2 className="font-bold text-white">Revenue trend</h2><p className="mt-1 text-xs text-white/40">Daily movement from completed purchases</p></div><span className="rounded-full bg-emerald-400/10 px-3 py-1 text-xs text-emerald-300">{money(s.purchaseRevenue)} total</span></div><div className="h-[280px] w-full">{analytics.daily.length ? <ResponsiveContainer width="100%" height="100%"><RechartsLineChart data={analytics.daily} margin={{ top: 12, right: 12, left: 4, bottom: 0 }}><CartesianGrid stroke="#ffffff12" vertical={false} /><XAxis dataKey="date" tickFormatter={(date) => date.slice(5)} tick={{ fill: "#ffffff66", fontSize: 11 }} axisLine={false} tickLine={false} /><YAxis tickFormatter={(value) => `₦${Number(value).toLocaleString()}`} tick={{ fill: "#ffffff66", fontSize: 11 }} axisLine={false} tickLine={false} width={72} /><Tooltip contentStyle={{ background: "#24113f", border: "1px solid #ffffff22", borderRadius: 12, color: "#fff" }} formatter={(value: number) => [money(value), "Revenue"]} /><Line type="linear" dataKey="revenue" stroke="#df20ba" strokeWidth={2.5} dot={{ r: 3, fill: "#24113f", stroke: "#df20ba", strokeWidth: 2 }} activeDot={{ r: 6, fill: "#df20ba", stroke: "#fff", strokeWidth: 2 }} /></RechartsLineChart></ResponsiveContainer> : <div className="flex h-full items-center justify-center text-sm text-white/35">No completed purchases in this date range.</div>}</div></section>
