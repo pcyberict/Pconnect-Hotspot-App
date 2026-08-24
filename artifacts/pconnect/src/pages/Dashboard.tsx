@@ -13,6 +13,7 @@ import { getRegistrationUrl } from "@/lib/auth-redirect.ts";
 function DashboardInner() {
   const { user } = useAuth();
   const wallet = useQuery(api.wallets.getMyWallet, {});
+  const dashboardStats = useQuery<{ activeVouchers: number; totalPurchases: number }>(api.users.getDashboardStats, {});
   const firstName = user?.profile.name?.split(" ")[0] ?? "there";
 
   return (
@@ -42,24 +43,24 @@ function DashboardInner() {
           </Button>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+        <div className="rounded-2xl border border-[#7519e9]/30 bg-gradient-to-br from-[#7519e9]/25 via-[#45127f]/20 to-[#23103e]/80 p-6 backdrop-blur-xl">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Ticket className="size-4" />
             Active Vouchers
           </div>
-          <div className="mt-2 text-3xl font-bold">0</div>
-          <Button asChild variant="secondary" size="sm" className="mt-4">
+          {dashboardStats === undefined ? <Skeleton className="mt-3 h-9 w-16" /> : <div className="mt-2 text-3xl font-bold">{dashboardStats.activeVouchers.toLocaleString()}</div>}
+          <Button asChild variant="glossy" size="sm" className="mt-4 bg-gradient-to-r from-[#7519e9] to-[#4f46e5]">
             <Link to="/my-vouchers">View Vouchers</Link>
           </Button>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+        <div className="rounded-2xl border border-[#df20ba]/30 bg-gradient-to-br from-[#df20ba]/25 via-[#8d216f]/20 to-[#23103e]/80 p-6 backdrop-blur-xl">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Receipt className="size-4" />
             Total Purchases
           </div>
-          <div className="mt-2 text-3xl font-bold">0</div>
-          <Button asChild variant="secondary" size="sm" className="mt-4">
+          {dashboardStats === undefined ? <Skeleton className="mt-3 h-9 w-16" /> : <div className="mt-2 text-3xl font-bold">{dashboardStats.totalPurchases.toLocaleString()}</div>}
+          <Button asChild variant="glossy" size="sm" className="mt-4 bg-gradient-to-r from-[#df20ba] to-[#ff6b9d]">
             <Link to="/purchases">View History</Link>
           </Button>
         </div>

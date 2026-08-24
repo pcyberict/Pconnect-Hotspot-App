@@ -572,6 +572,20 @@ router.get("/purchases", async (req, res) => {
   return res.json(result.rows.map((row) => withId({ ...row, voucher: { username: row.voucher_username, password: row.voucher_password }, planName: row.plan_name })));
 });
 
+router.get("/dashboard/stats", async (req, res) => {
+  const user = await currentUser(tokenFor(req));
+  if (!user) return res.status(401).json({ error: "Not logged in" });
+  const result = await pool.query(`
+    SELECT
+      (SELECT COUNT(*)::int FROM pconnect_purchases WHERE user_id=$1 AND status='completed') AS "totalPurchases",
+      (SELECT COUNT(*)::int
+       FROM pconnect_purchases p
+       JOIN pconnect_vouchers v ON v.id=p.voucher_id
+       WHERE p.user_id=$1 AND p.status='completed' AND v.status='sold') AS "activeVouchers"
+  `, [user.id]);
+  return res.json(result.rows[0] ?? { totalPurchases: 0, activeVouchers: 0 });
+});
+
 router.get("/admin/purchases", async (_req, res) => {
   const result = await pool.query(`SELECT p.*, u.name AS "userName", u.email AS "userEmail",
     v.username AS "voucherUsername", vp.name AS "planName"

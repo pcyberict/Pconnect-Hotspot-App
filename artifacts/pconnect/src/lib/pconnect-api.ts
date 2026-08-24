@@ -10,6 +10,7 @@ const endpoint = (path: string): Endpoint => path;
 export const api = {
   users: {
     getCurrentUser: endpoint("users.getCurrentUser"),
+    getDashboardStats: endpoint("users.getDashboardStats"),
     updateCurrentUser: endpoint("users.updateCurrentUser"),
     updateMyProfile: endpoint("users.updateMyProfile"),
     changePassword: endpoint("users.changePassword"),
@@ -78,6 +79,7 @@ async function request(fn: Endpoint, args: Args = {}, method: "GET" | "POST" = "
   });
   const paths: Record<string, string> = {
     "users.getCurrentUser": "me",
+    "users.getDashboardStats": "dashboard/stats",
     "users.updateCurrentUser": "users/sync",
     "users.updateMyProfile": "users/profile",
     "users.changePassword": "users/change-password",
