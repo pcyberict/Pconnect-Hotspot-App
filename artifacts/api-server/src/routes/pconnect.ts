@@ -99,6 +99,43 @@ function databaseErrorMessage(error: unknown) {
     : "The database could not complete this request";
 }
 
+async function flutterwaveSecret() {
+  const result = await pool.query("SELECT value FROM pconnect_site_settings WHERE key='flutterwave_secret_key'");
+  const secret = String(result.rows[0]?.value ?? "").trim();
+  if (!secret) throw new Error("Flutterwave secret key is not configured. Ask an admin to add it in Settings.");
+  return secret;
+}
+
+async function createFlutterwaveVirtualAccount(user: Record<string, unknown>, identityType: "bvn" | "nin", identityNumber: string) {
+  const secret = await flutterwaveSecret();
+  const fullName = String(user.name ?? "").trim().split(/\s+/).filter(Boolean);
+  const response = await fetch("https://api.flutterwave.com/v3/virtual-account-numbers", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: user.email,
+      firstname: fullName[0] ?? "Pconnect",
+      lastname: fullName.slice(1).join(" ") || "Customer",
+      phonenumber: user.phone ?? undefined,
+      tx_ref: `pconnect-va-${user.id}`,
+      is_permanent: true,
+      [identityType]: identityNumber,
+    }),
+  });
+  const body = await response.json().catch(() => ({})) as Record<string, any>;
+  if (!response.ok || body.status !== "success" || !body.data?.account_number) {
+    throw new Error(body.message || "Flutterwave could not create the virtual account");
+  }
+  return {
+    accountNumber: String(body.data.account_number),
+    bankName: String(body.data.bank_name ?? "Flutterwave"),
+    accountName: String(body.data.account_name ?? `${user.name ?? "Pconnect Customer"}`),
+    orderRef: body.data.order_ref ? String(body.data.order_ref) : undefined,
+    flwRef: body.data.flw_ref ? String(body.data.flw_ref) : undefined,
+    createdAt: body.data.created_at ? String(body.data.created_at) : new Date().toISOString(),
+  };
+}
+
 router.post("/auth/register", async (req, res) => {
   const name = String(req.body?.name ?? "").trim();
   const email = String(req.body?.email ?? "").trim().toLowerCase();
@@ -331,6 +368,74 @@ router.get("/wallet", async (req, res) => {
   if (!user) return res.json(null);
   const result = await pool.query("SELECT * FROM pconnect_wallets WHERE user_id = $1", [user.id]);
   return res.json(result.rows[0] ? withId(result.rows[0]) : null);
+});
+
+router.post("/wallet/virtual-account", async (req, res) => {
+  const user = await currentUser(tokenFor(req));
+  const identityType = req.body?.identityType === "nin" ? "nin" : "bvn";
+  const identityNumber = String(req.body?.identityNumber ?? "").replace(/\s/g, "");
+  if (!user) return res.status(401).json({ error: "Not logged in" });
+  if (!/^\d{11}$/.test(identityNumber)) return res.status(400).json({ error: "Enter a valid 11-digit BVN or NIN" });
+  const wallet = (await pool.query("SELECT * FROM pconnect_wallets WHERE user_id=$1", [user.id])).rows[0];
+  if (!wallet) return res.status(404).json({ error: "Wallet not found" });
+  if (wallet.virtual_account?.accountNumber) return res.json(wallet.virtual_account);
+  try {
+    const virtualAccount = await createFlutterwaveVirtualAccount(user, identityType, identityNumber);
+    await pool.query("UPDATE pconnect_wallets SET virtual_account=$1 WHERE user_id=$2", [JSON.stringify(virtualAccount), user.id]);
+    return res.json(virtualAccount);
+  } catch (error) {
+    return res.status(502).json({ error: error instanceof Error ? error.message : "Could not create virtual account" });
+  }
+});
+
+router.post("/webhooks/flutterwave", async (req, res) => {
+  const expectedHash = String((await pool.query("SELECT value FROM pconnect_site_settings WHERE key='flutterwave_webhook_hash'")).rows[0]?.value ?? "");
+  const receivedHash = String(req.headers["verif-hash"] ?? "");
+  if (!expectedHash || !receivedHash || receivedHash !== expectedHash) return res.status(401).json({ error: "Invalid webhook signature" });
+  const data = req.body?.data ?? {};
+  if (String(data.status ?? "").toLowerCase() !== "successful") return res.json({ received: true });
+  const accountNumber = String(data.account_number ?? data.accountNumber ?? "");
+  const amount = Number(data.amount);
+  const providerTransactionId = String(data.id ?? data.flw_ref ?? "");
+  if (!accountNumber || !Number.isFinite(amount) || amount <= 0 || !providerTransactionId) return res.status(400).json({ error: "Incomplete payment event" });
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const wallet = (await client.query(
+      "SELECT * FROM pconnect_wallets WHERE virtual_account->>'accountNumber'=$1 FOR UPDATE", [accountNumber],
+    )).rows[0];
+    if (!wallet) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Virtual account not found" });
+    }
+    const duplicate = (await client.query(
+      "SELECT id FROM pconnect_wallet_transactions WHERE provider_transaction_id=$1", [providerTransactionId],
+    )).rows[0];
+    if (duplicate) {
+      await client.query("COMMIT");
+      return res.json({ received: true, duplicate: true });
+    }
+    const previousBalance = Number(wallet.balance);
+    const newBalance = previousBalance + amount;
+    const reference = `pcc-flw-${providerTransactionId}`;
+    const transaction = (await client.query(`INSERT INTO pconnect_wallet_transactions
+      (user_id,wallet_id,type,amount,previous_balance,new_balance,status,reference,provider,provider_transaction_id,payment_channel,description)
+      VALUES ($1,$2,'deposit',$3,$4,$5,'successful',$6,'flutterwave',$7,'bank_transfer','Wallet funding via Flutterwave bank transfer') RETURNING id`,
+      [wallet.user_id, wallet.id, amount, previousBalance, newBalance, reference, providerTransactionId])).rows[0];
+    await client.query("UPDATE pconnect_wallets SET balance=$1 WHERE id=$2", [newBalance, wallet.id]);
+    await creditReferralCommission(client, String(wallet.user_id), amount, transaction.id);
+    await client.query(`INSERT INTO pconnect_notifications (user_id,title,message,type)
+      VALUES ($1,'Wallet funded successfully',$2,'wallet')`,
+      [wallet.user_id, `${amount.toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 })} has been added to your wallet.`]);
+    await client.query("COMMIT");
+    return res.json({ received: true });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    return res.status(500).json({ error: error instanceof Error ? error.message : "Webhook processing failed" });
+  } finally {
+    client.release();
+  }
 });
 
 router.get("/deposits", async (req, res) => {

@@ -14,7 +14,7 @@ export const api = {
     updateMyProfile: endpoint("users.updateMyProfile"),
     changePassword: endpoint("users.changePassword"),
   },
-  wallets: { getMyWallet: endpoint("wallets.getMyWallet") },
+  wallets: { getMyWallet: endpoint("wallets.getMyWallet"), generateVirtualAccount: endpoint("wallets.generateVirtualAccount") },
   wallet: {
     deposits: {
       getMyDepositHistory: endpoint("wallet.deposits.getMyDepositHistory"),
@@ -80,6 +80,7 @@ async function request(fn: Endpoint, args: Args = {}, method: "GET" | "POST" = "
     "users.updateMyProfile": "users/profile",
     "users.changePassword": "users/change-password",
     "wallets.getMyWallet": "wallet",
+    "wallets.generateVirtualAccount": "wallet/virtual-account",
     "wallet.deposits.getMyDepositHistory": "deposits",
     "wallet.deposits.createPendingDeposit": "deposits",
     "wallet.deposits.verifyDepositById": "deposits/verify",
@@ -171,7 +172,7 @@ export function useQuery<T = any>(fn: Endpoint, args: Args | "skip" = {}) {
     enabled,
     staleTime: 15_000,
     refetchOnWindowFocus: fn.startsWith("siteSettings"),
-    refetchInterval: fn === "siteSettings.get" ? 5_000 : false,
+    refetchInterval: fn === "siteSettings.get" || fn === "wallets.getMyWallet" || fn === "wallet.deposits.getMyDepositHistory" ? 5_000 : false,
   });
   return query.data as T | undefined;
 }

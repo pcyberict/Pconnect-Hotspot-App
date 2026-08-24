@@ -60,7 +60,8 @@ const schemaStatements = [
   `CREATE TABLE IF NOT EXISTS pconnect_wallets (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id uuid NOT NULL REFERENCES pconnect_users(id) ON DELETE CASCADE,
-    balance double precision NOT NULL DEFAULT 0
+    balance double precision NOT NULL DEFAULT 0,
+    virtual_account jsonb
   )`,
   `CREATE TABLE IF NOT EXISTS pconnect_voucher_plans (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -167,6 +168,7 @@ const schemaStatements = [
   `ALTER TABLE pconnect_vouchers ADD COLUMN IF NOT EXISTS purchase_id uuid`,
   `ALTER TABLE pconnect_wallet_transactions ADD COLUMN IF NOT EXISTS payment_channel text`,
   `ALTER TABLE pconnect_wallet_transactions ADD COLUMN IF NOT EXISTS virtual_account jsonb`,
+  `ALTER TABLE pconnect_wallets ADD COLUMN IF NOT EXISTS virtual_account jsonb`,
   `ALTER TABLE pconnect_purchases ADD COLUMN IF NOT EXISTS status pconnect_purchase_status NOT NULL DEFAULT 'completed'`,
   `ALTER TABLE pconnect_notifications ADD COLUMN IF NOT EXISTS read_at timestamptz`,
   `CREATE UNIQUE INDEX IF NOT EXISTS pconnect_users_token_idx ON pconnect_users(token_identifier)`,

@@ -53,6 +53,8 @@ type VirtualAccount = {
   orderRef?: string;
 };
 
+type WalletData = { balance: number; virtualAccount?: VirtualAccount | null };
+
 function useFlutterwaveScript() {
   const [loaded, setLoaded] = useState(false);
   useEffect(() => {
@@ -224,7 +226,8 @@ function BankTransferPanel({ amount, reference, onSuccess, onCancel }: {
 }
 
 function WalletInner() {
-  const wallet = useQuery(api.wallets.getMyWallet, {});
+  const wallet = useQuery<WalletData | null>(api.wallets.getMyWallet, {});
+  const generateVirtualAccount = useMutation(api.wallets.generateVirtualAccount);
   const depositHistory = useQuery<WalletTransaction[]>(api.wallet.deposits.getMyDepositHistory, {});
   const publicKey = useQuery(api.siteSettings.getPublicKey, {});
   const createPending = useMutation(api.wallet.deposits.createPendingDeposit);
@@ -240,6 +243,9 @@ function WalletInner() {
   const [bankSession, setBankSession] = useState<{ reference: string; amount: number } | null>(null);
   const [preparingCard, setPreparingCard] = useState(false);
   const [preparingBank, setPreparingBank] = useState(false);
+  const [showAccountSetup, setShowAccountSetup] = useState(false);
+  const [identityType, setIdentityType] = useState<"bvn" | "nin">("bvn");
+  const [identityNumber, setIdentityNumber] = useState("");
 
   const parsedAmount = parseFloat(amount);
   const validAmount = !isNaN(parsedAmount) && parsedAmount >= 100;
@@ -350,6 +356,23 @@ function WalletInner() {
           <span className="text-xs text-white/40">Instant credit · Secure payments · Powered by Flutterwave</span>
         </div>
       </div>
+
+      {wallet?.virtualAccount?.accountNumber ? (
+        <div className="mt-5 rounded-3xl border border-[#7519e9]/25 bg-[#23103e]/60 p-6">
+          <div className="flex items-center gap-3"><Building2 size={18} className="text-purple-300" /><div><h2 className="font-bold text-white">Your permanent bank account</h2><p className="text-xs text-white/40">Transfer funds here and your wallet updates automatically.</p></div></div>
+          <div className="mt-4 divide-y divide-white/10 rounded-2xl border border-white/10 bg-black/15">
+            <AccountRow label="Bank Name" value={wallet.virtualAccount.bankName} />
+            <AccountRow label="Account Number" value={wallet.virtualAccount.accountNumber} highlight onCopy={() => { void navigator.clipboard.writeText(wallet.virtualAccount!.accountNumber); toast.success("Account number copied"); }} />
+            <AccountRow label="Account Name" value={wallet.virtualAccount.accountName} />
+          </div>
+          <p className="mt-3 text-xs text-white/35">Payments are confirmed by Flutterwave and credited to your wallet automatically.</p>
+        </div>
+      ) : (
+        <div className="mt-5 rounded-3xl border border-[#7519e9]/25 bg-[#23103e]/60 p-6">
+          <div className="flex items-center justify-between gap-3"><div className="flex items-center gap-3"><Building2 size={18} className="text-purple-300" /><div><h2 className="font-bold text-white">Get your permanent bank account</h2><p className="text-xs text-white/40">Generate bank details for easy wallet funding.</p></div></div><Button variant="secondary" onClick={() => setShowAccountSetup(value => !value)}><Building2 size={14} /> Generate</Button></div>
+          {showAccountSetup && <div className="mt-4 grid gap-3 sm:grid-cols-[140px_1fr_auto]"><select value={identityType} onChange={event => setIdentityType(event.target.value as "bvn" | "nin")} className="rounded-xl border border-white/10 bg-white/[0.04] px-3 text-sm text-white"><option value="bvn">BVN</option><option value="nin">NIN</option></select><input inputMode="numeric" maxLength={11} value={identityNumber} onChange={event => setIdentityNumber(event.target.value.replace(/\D/g, ""))} placeholder={`11-digit ${identityType.toUpperCase()}`} className="rounded-xl border border-white/10 bg-white/[0.04] px-3 text-sm text-white placeholder-white/25 outline-none" /><Button variant="glossy" disabled={identityNumber.length !== 11} onClick={() => void generateVirtualAccount({ identityType, identityNumber })}>Create account</Button></div>}
+        </div>
+      )}
 
       <div className="mt-5 relative overflow-hidden rounded-3xl border border-[#7519e9]/25 bg-gradient-to-br from-[#1a0b30]/90 via-[#150925]/90 to-[#0e0620]/90 backdrop-blur-xl shadow-[0_0_40px_rgba(117,25,233,0.08)]">
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7519e9]/60 to-transparent" />

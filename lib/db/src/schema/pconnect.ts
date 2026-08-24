@@ -38,6 +38,9 @@ export const wallets = pgTable("pconnect_wallets", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   balance: doublePrecision("balance").notNull().default(0),
+  virtualAccount: jsonb("virtual_account").$type<{
+    accountNumber: string; bankName: string; accountName: string; orderRef?: string; flwRef?: string; createdAt?: string;
+  }>(),
 }, (table) => ({
   userIdx: uniqueIndex("pconnect_wallets_user_idx").on(table.userId),
 }));

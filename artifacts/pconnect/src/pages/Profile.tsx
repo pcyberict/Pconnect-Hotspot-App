@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation } from "@/lib/pconnect-api.ts";
 import { toast } from "sonner";
-import { User, Mail, Phone, Save, LogOut, ShieldCheck, LockKeyhole, Eye, EyeOff, Gift } from "lucide-react";
+import { User, Mail, Phone, Save, LogOut, ShieldCheck, LockKeyhole, Eye, EyeOff, Gift, Building2, Copy } from "lucide-react";
 import { api } from "@/lib/pconnect-api.ts";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -11,7 +11,8 @@ import { getRegistrationUrl } from "@/lib/auth-redirect.ts";
 
 function ProfileInner() {
   const me = useQuery(api.users.getCurrentUser, {});
-  const wallet = useQuery<{ balance: number } | null>(api.wallets.getMyWallet, {});
+  const wallet = useQuery<{ balance: number; virtualAccount?: { accountNumber: string; bankName: string; accountName: string } } | null>(api.wallets.getMyWallet, {});
+  const generateVirtualAccount = useMutation(api.wallets.generateVirtualAccount);
   const updateProfile = useMutation(api.users.updateMyProfile);
   const changePassword = useMutation(api.users.changePassword);
   const { signout } = useAuth();
@@ -23,6 +24,9 @@ function ProfileInner() {
   const [passwords, setPasswords] = useState({ current: "", next: "", confirm: "" });
   const [showPasswords, setShowPasswords] = useState({ current: false, next: false, confirm: false });
   const [passwordSaving, setPasswordSaving] = useState(false);
+  const [identityType, setIdentityType] = useState<"bvn" | "nin">("bvn");
+  const [identityNumber, setIdentityNumber] = useState("");
+  const [generatingAccount, setGeneratingAccount] = useState(false);
 
   if (me != null && !initialized) {
     setName(me.name ?? "");
@@ -74,6 +78,24 @@ function ProfileInner() {
     }
   };
 
+  const handleGenerateAccount = async () => {
+    if (!/^\d{11}$/.test(identityNumber.replace(/\s/g, ""))) {
+      toast.error(`Enter a valid 11-digit ${identityType.toUpperCase()}`);
+      return;
+    }
+    setGeneratingAccount(true);
+    try {
+      await updateProfile({ name: name || undefined, phone: phone || undefined });
+      await generateVirtualAccount({ identityType, identityNumber: identityNumber.replace(/\s/g, "") });
+      toast.success("Permanent bank details generated");
+      setIdentityNumber("");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not generate bank details");
+    } finally {
+      setGeneratingAccount(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-xl px-4 py-10 md:px-8">
       <div className="mb-8">
@@ -105,6 +127,34 @@ function ProfileInner() {
           <div className="mt-1 text-2xl font-extrabold text-pink-200">₦{Number(wallet?.balance ?? 0).toLocaleString("en-NG")}</div>
           <p className="mt-1 text-xs text-white/45">Your welcome bonus and wallet funds are ready for voucher purchases.</p>
         </div>
+      </div>
+      <div className="mb-5 rounded-3xl border border-[#7519e9]/25 bg-[#23103e]/60 p-6">
+        <div className="flex items-center gap-3">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#7519e9]/20 text-purple-200"><Building2 size={20} /></div>
+          <div><h2 className="font-semibold text-white">Permanent bank details</h2><p className="text-xs text-white/45">Generate a personal Flutterwave account for bank transfers.</p></div>
+        </div>
+        {wallet?.virtualAccount?.accountNumber ? (
+          <div className="mt-5 space-y-2 rounded-2xl border border-white/10 bg-black/15 p-4">
+            {[
+              ["Bank", wallet.virtualAccount.bankName],
+              ["Account number", wallet.virtualAccount.accountNumber],
+              ["Account name", wallet.virtualAccount.accountName],
+            ].map(([label, value]) => <div key={label} className="flex items-center justify-between gap-3 text-sm"><span className="text-white/40">{label}</span><span className="flex items-center gap-2 font-semibold text-white">{value}{label === "Account number" && <button type="button" onClick={() => { void navigator.clipboard.writeText(value); toast.success("Account number copied"); }} className="text-purple-300"><Copy size={14} /></button>}</span></div>)}
+          </div>
+        ) : (
+          <>
+            <div className="mt-5 grid gap-3 sm:grid-cols-[140px_1fr]">
+              <select value={identityType} onChange={(event) => setIdentityType(event.target.value as "bvn" | "nin")} className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none">
+                <option value="bvn">BVN</option><option value="nin">NIN</option>
+              </select>
+              <input inputMode="numeric" maxLength={11} value={identityNumber} onChange={(event) => setIdentityNumber(event.target.value.replace(/\D/g, ""))} placeholder={`Enter your 11-digit ${identityType.toUpperCase()}`} className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-white/25 outline-none focus:border-[#7519e9]/60" />
+            </div>
+            <p className="mt-3 text-xs leading-5 text-white/35">Your identity number is sent securely to Flutterwave for verification and is not displayed or saved by Pconnect.</p>
+            <Button variant="glossy" className="mt-4 w-full sm:w-auto" disabled={generatingAccount} onClick={() => void handleGenerateAccount()}>
+              <Building2 size={14} /> {generatingAccount ? "Generating…" : "Generate bank details"}
+            </Button>
+          </>
+        )}
       </div>
       <div className="relative overflow-hidden rounded-3xl border border-[#7519e9]/20 bg-gradient-to-br from-[#1a0b30]/90 via-[#150925]/90 to-[#0e0620]/90 shadow-[0_0_40px_rgba(117,25,233,0.06)]">
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#7519e9]/50 to-transparent" />
