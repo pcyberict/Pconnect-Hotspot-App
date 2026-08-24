@@ -293,16 +293,20 @@ export default function Index() {
         <div className="mx-auto max-w-7xl">
           <h2 className="mb-2 text-center text-2xl font-bold text-white md:text-3xl">Frequently Asked{" "}<span className="bg-gradient-to-r from-[#7519e9] to-[#df20ba] bg-clip-text text-transparent">Questions</span></h2>
           <p className="mb-10 text-center text-sm text-white/50">Everything you need to know</p>
-          <div className="grid grid-cols-1 gap-3">
-            {FAQS.map((faq) => (
-              <FaqItem
-                key={faq.q}
-                q={faq.q}
-                a={faq.a}
-                open={openFaq === faq.q}
-                onToggle={() => setOpenFaq((current) => current === faq.q ? null : faq.q)}
-              />
-            ))}
+           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-x-6 md:items-start">
+             {[FAQS.slice(0, 3), FAQS.slice(3)].map((column, columnIndex) => (
+               <div key={columnIndex} className="space-y-3">
+                 {column.map((faq) => (
+                   <FaqItem
+                     key={faq.q}
+                     q={faq.q}
+                     a={faq.a}
+                     open={openFaq === faq.q}
+                     onToggle={() => setOpenFaq((current) => current === faq.q ? null : faq.q)}
+                   />
+                 ))}
+               </div>
+             ))}
           </div>
         </div>
       </section>
