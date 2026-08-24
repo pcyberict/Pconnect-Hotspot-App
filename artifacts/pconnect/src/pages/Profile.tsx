@@ -139,7 +139,7 @@ function ProfileInner() {
               ["Bank", wallet.virtualAccount.bankName],
               ["Account number", wallet.virtualAccount.accountNumber],
               ["Account name", wallet.virtualAccount.accountName],
-            ].map(([label, value]) => <div key={label} className="flex items-center justify-between gap-3 text-sm"><span className="text-white/40">{label}</span><span className="flex items-center gap-2 font-semibold text-white">{value}{label === "Account number" && <button type="button" onClick={() => { void navigator.clipboard.writeText(value); toast.success("Account number copied"); }} className="text-purple-300"><Copy size={14} /></button>}</span></div>)}
+            ].map(([label, value]) => <div key={label} className={`flex gap-3 text-sm ${label === "Account number" ? "items-start sm:items-center" : "items-center"} justify-between`}><span className="shrink-0 text-white/40">{label}</span><span className={`flex min-w-0 items-center gap-2 font-semibold text-white ${label === "Account number" ? "break-all text-right" : "text-right"}`}>{value}{label === "Account number" && <button type="button" onClick={() => { void navigator.clipboard.writeText(value); toast.success("Account number copied"); }} className="shrink-0 text-purple-300"><Copy size={14} /></button>}</span></div>)}
           </div>
         ) : (
           <>
