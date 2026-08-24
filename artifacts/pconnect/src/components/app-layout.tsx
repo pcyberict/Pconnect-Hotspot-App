@@ -18,7 +18,7 @@ export default function AppLayout() {
   return (
     <div className="flex min-h-[100dvh] w-full max-w-full flex-col overflow-x-clip bg-[#23103e]/30">
       <SiteHeader />
-      <main className="min-w-0 flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0"><Outlet /></main>
+      <main className="min-w-0 flex-1 pb-[4.5rem] md:pb-0"><Outlet /></main>
       {/* Hide full footer on mobile when logged in; always show on desktop */}
       <Authenticated>
         <div className="hidden shrink-0 md:block"><SiteFooter /></div>
@@ -28,10 +28,7 @@ export default function AppLayout() {
       </Unauthenticated>
       <Authenticated>
         <nav
-          className="fixed inset-x-0 bottom-0 z-40 flex min-h-[4.5rem] items-center justify-around border-t border-white/10 bg-[#10051f]/95 px-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(0,0,0,0.2)] backdrop-blur-xl md:hidden"
-          style={{
-            paddingBottom: "max(0.5rem, env(safe-area-inset-bottom, 0px))",
-          }}
+          className="fixed inset-x-0 bottom-0 z-40 flex min-h-[4.5rem] items-center justify-around border-t border-white/10 bg-[#10051f]/95 px-1 pt-2 shadow-[0_-8px_24px_rgba(0,0,0,0.2)] backdrop-blur-xl md:hidden"
         >
           {MOBILE_NAV_LINKS.map((link) => {
             const Icon = link.icon;
