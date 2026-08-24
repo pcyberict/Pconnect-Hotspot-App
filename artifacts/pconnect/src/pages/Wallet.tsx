@@ -71,10 +71,10 @@ function useFlutterwaveScript() {
 
 function AccountRow({ label, value, onCopy, highlight }: { label: string; value: string; onCopy?: () => void; highlight?: boolean }) {
   return (
-    <div className={`flex justify-between px-5 py-4 gap-3 ${highlight ? "flex-col items-start sm:flex-row sm:items-center" : "items-center"}`}>
+    <div className="flex flex-col items-start gap-2 px-5 py-4">
       <span className="text-xs text-white/40 shrink-0 uppercase tracking-wider">{label}</span>
-      <div className={`flex min-w-0 items-center gap-2 ${highlight ? "w-full sm:w-auto sm:max-w-[65%]" : ""}`}>
-        <span className={`${highlight ? "break-all whitespace-normal text-white text-xl font-extrabold tracking-widest" : "truncate text-sm font-semibold text-white/80"}`}>{value}</span>
+      <div className="flex w-full min-w-0 items-center gap-2">
+        <span className={`${highlight ? "break-all whitespace-normal text-white text-xl font-extrabold tracking-widest" : "break-words text-sm font-semibold text-white/80"}`}>{value}</span>
         {onCopy && (
           <button onClick={onCopy} className="cursor-pointer shrink-0 rounded-lg p-1.5 bg-white/5 hover:bg-[#7519e9]/30 text-white/30 hover:text-purple-300 transition-all">
             <Copy size={13} />
