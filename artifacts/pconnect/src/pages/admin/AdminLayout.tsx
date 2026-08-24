@@ -142,36 +142,9 @@ export default function AdminLayout() {
                )}
                </div>
 
-                <main className="min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto p-4 pb-24 md:p-8 md:pb-28">
+                 <main className="min-w-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto p-4 pb-8 md:p-8 md:pb-10">
                 <Outlet />
               </main>
-
-               <nav
-                 aria-label="Admin quick navigation"
-                 className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#100520]/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_32px_rgba(0,0,0,0.2)] backdrop-blur-xl md:px-8"
-               >
-                  <div className="mx-auto grid max-w-4xl grid-cols-3 gap-1 sm:grid-cols-6">
-                      {ADMIN_NAV.filter(({ to }) => ["/admin/plans", "/admin/inventory", "/admin/purchases", "/admin/users", "/admin/bonus", "/admin/referrals", "/admin/analytics"].includes(to)).map(({ label, to, icon: Icon }) => {
-                     const isActive = location.pathname.startsWith(to);
-                     return (
-                       <Link
-                         key={to}
-                         to={to}
-                         aria-current={isActive ? "page" : undefined}
-                         className={cn(
-                           "flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-2 text-[11px] font-medium transition-colors",
-                           isActive
-                             ? "bg-[#7519e9]/20 text-white"
-                             : "text-white/45 hover:bg-white/5 hover:text-white",
-                         )}
-                       >
-                         <Icon size={18} />
-                         <span>{label}</span>
-                       </Link>
-                     );
-                   })}
-                 </div>
-               </nav>
             </div>
           </div>
         </AdminGuard>
