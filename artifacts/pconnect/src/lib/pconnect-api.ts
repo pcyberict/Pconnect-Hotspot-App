@@ -29,6 +29,7 @@ export const api = {
     listAllPlans: endpoint("voucherPlans.listAllPlans"),
     createPlan: endpoint("voucherPlans.createPlan"),
     updatePlan: endpoint("voucherPlans.updatePlan"),
+    deletePlan: endpoint("voucherPlans.deletePlan"),
   },
   vouchers: {
     getMyPurchases: endpoint("vouchers.getMyPurchases"),
@@ -91,6 +92,7 @@ async function request(fn: Endpoint, args: Args = {}, method: "GET" | "POST" = "
     "voucherPlans.listAllPlans": "admin/plans",
     "voucherPlans.createPlan": "admin/plans",
     "voucherPlans.updatePlan": "admin/plans",
+    "voucherPlans.deletePlan": "admin/plans/delete",
     "vouchers.getMyPurchases": "purchases",
     "vouchers.purchaseVoucher": "purchase",
     "vouchers.getAdminStats": "admin/stats",

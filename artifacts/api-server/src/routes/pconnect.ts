@@ -358,6 +358,30 @@ router.post("/admin/plans", async (req, res) => {
   }
 });
 
+router.post("/admin/plans/delete", async (req, res) => {
+  const planId = String(req.body?.planId ?? "").trim();
+  if (!planId) return res.status(400).json({ error: "A valid plan is required" });
+  try {
+    const usage = await pool.query(`
+      SELECT
+        (SELECT COUNT(*)::int FROM pconnect_vouchers WHERE plan_id=$1) AS vouchers,
+        (SELECT COUNT(*)::int FROM pconnect_purchases WHERE plan_id=$1) AS purchases
+    `, [planId]);
+    const vouchers = Number(usage.rows[0]?.vouchers ?? 0);
+    const purchases = Number(usage.rows[0]?.purchases ?? 0);
+    if (vouchers > 0 || purchases > 0) {
+      return res.status(409).json({
+        error: `This plan cannot be deleted because it has ${vouchers.toLocaleString()} voucher${vouchers === 1 ? "" : "s"} and ${purchases.toLocaleString()} purchase${purchases === 1 ? "" : "s"} linked to it. Deactivate it instead.`,
+      });
+    }
+    const result = await pool.query("DELETE FROM pconnect_voucher_plans WHERE id=$1 RETURNING id", [planId]);
+    if (!result.rows[0]) return res.status(404).json({ error: "Plan not found" });
+    return res.json({ deleted: true, planId });
+  } catch (error) {
+    return res.status(400).json({ error: error instanceof Error ? error.message : "Plan could not be deleted" });
+  }
+});
+
 router.get("/me", async (req, res) => {
   const user = await currentUser(tokenFor(req));
   if (!user) return res.status(404).json({ error: "User not found" });

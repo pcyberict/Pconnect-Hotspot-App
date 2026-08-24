@@ -319,9 +319,11 @@ export default function AdminPlans() {
   const plans = useQuery<AdminPlan[]>(api.voucherPlans.listAllPlans, {});
   const createPlan = useMutation(api.voucherPlans.createPlan);
   const updatePlan = useMutation(api.voucherPlans.updatePlan);
+  const deletePlan = useMutation(api.voucherPlans.deletePlan);
 
   const [showCreate, setShowCreate] = useState(false);
   const [editId, setEditId] = useState<Id<"voucherPlans"> | null>(null);
+  const [deletingId, setDeletingId] = useState<Id<"voucherPlans"> | null>(null);
 
   const handleCreate = async (form: PlanForm) => {
     try {
@@ -363,6 +365,19 @@ export default function AdminPlans() {
       setEditId(null);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error");
+    }
+  };
+
+  const handleDelete = async (plan: AdminPlan) => {
+    if (!window.confirm(`Delete "${plan.name}"? This cannot be undone.`)) return;
+    setDeletingId(plan._id);
+    try {
+      await deletePlan({ planId: plan._id });
+      toast.success("Plan deleted");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Plan could not be deleted");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -448,11 +463,21 @@ export default function AdminPlans() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-white/40 shrink-0">
+                  <div className="flex items-center gap-2 text-xs text-white/40 shrink-0">
                     <span>{plan.availableCount} in stock</span>
                     <Button variant="secondary" size="sm" onClick={() => setEditId(plan._id)}>
                       <Pencil size={12} /> Edit
                     </Button>
+                    <button
+                      type="button"
+                      title="Delete plan"
+                      aria-label={`Delete ${plan.name}`}
+                      disabled={deletingId === plan._id}
+                      onClick={() => void handleDelete(plan)}
+                      className="cursor-pointer rounded-lg p-2 text-white/30 transition-colors hover:bg-red-500/10 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <Trash2 size={15} />
+                    </button>
                   </div>
                 </div>
               )}
