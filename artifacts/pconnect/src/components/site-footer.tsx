@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MessageCircle } from "lucide-react";
+import { Heart, MessageCircle } from "lucide-react";
 import Logo from "@/components/logo.tsx";
 import { WHATSAPP_GROUP_URL } from "@/lib/whatsapp.ts";
 import { useSiteName } from "@/lib/site-settings.ts";
@@ -42,7 +42,11 @@ export default function SiteFooter() {
             </ul>
           </div>
         </div>
-        <div className="mt-6 border-t border-white/10 pt-3 text-center text-xs text-muted-foreground">&copy; 2026 <a href="https://pcyberict.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">PCYBER ICT SERVICES</a>. All rights reserved.</div>
+        <div className="mt-6 border-t border-white/10 pt-3 text-center text-xs text-muted-foreground">
+          &copy; {new Date().getFullYear()} <a href="https://pcyberict.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-bold text-emerald-400 no-underline hover:text-emerald-300">
+            <Heart className="size-3 animate-pulse fill-emerald-400" aria-hidden="true" />PCYBER ICT SERVICES
+          </a>. All rights reserved.
+        </div>
       </div>
     </footer>
   );
