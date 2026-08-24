@@ -3,7 +3,6 @@ import { Authenticated, Unauthenticated } from "@/lib/pconnect-api.ts";
 import { Home, Ticket, Wallet, History, User } from "lucide-react";
 import SiteHeader from "@/components/site-header.tsx";
 import SiteFooter from "@/components/site-footer.tsx";
-import WhatsAppFloatingButton from "@/components/whatsapp-floating-button.tsx";
 import { cn } from "@/lib/utils.ts";
 
 const MOBILE_NAV_LINKS = [
@@ -27,7 +26,6 @@ export default function AppLayout() {
       <Unauthenticated>
         <SiteFooter />
       </Unauthenticated>
-      <WhatsAppFloatingButton />
       <Authenticated>
         <nav
           className="fixed inset-x-0 bottom-0 z-40 flex min-h-[4.5rem] items-center justify-around border-t border-white/10 bg-[#10051f]/95 px-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-8px_24px_rgba(0,0,0,0.2)] backdrop-blur-xl md:hidden"
