@@ -144,8 +144,8 @@ function ProfileInner() {
         ) : (
           <>
             <div className="mt-5 grid gap-3 sm:grid-cols-[140px_1fr]">
-              <select value={identityType} onChange={(event) => setIdentityType(event.target.value as "bvn" | "nin")} className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none">
-                <option value="bvn">BVN</option><option value="nin">NIN</option>
+              <select value={identityType} onChange={(event) => setIdentityType(event.target.value as "bvn" | "nin")} className="appearance-none rounded-2xl border border-[#7519e9]/40 bg-[#23103e] px-4 py-3 text-sm text-white outline-none [color-scheme:dark]">
+                <option className="bg-[#23103e] text-white" value="bvn">BVN</option><option className="bg-[#23103e] text-white" value="nin">NIN</option>
               </select>
               <input inputMode="numeric" maxLength={11} value={identityNumber} onChange={(event) => setIdentityNumber(event.target.value.replace(/\D/g, ""))} placeholder={`Enter your 11-digit ${identityType.toUpperCase()}`} className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-white/25 outline-none focus:border-[#7519e9]/60" />
             </div>
