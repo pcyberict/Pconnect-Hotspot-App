@@ -66,6 +66,13 @@ export default function AdminLayout() {
                 <div className="text-sm font-bold text-white/40 uppercase tracking-widest">Admin Panel</div>
               </div>
               <nav className="flex flex-col gap-1 px-2 pb-6">
+                <Link
+                  to="/"
+                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/50 hover:bg-white/5 hover:text-white transition-colors"
+                >
+                  <Home size={16} />
+                  Home
+                </Link>
                 {ADMIN_NAV.map(({ label, to, icon: Icon, exact }) => {
                   const isExactAdmin = to === "/admin" && location.pathname === "/admin";
                   const isActive = exact
@@ -87,15 +94,6 @@ export default function AdminLayout() {
                     </Link>
                   );
                 })}
-                <div className="mt-auto pt-4 border-t border-white/10">
-                  <Link
-                    to="/"
-                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/50 hover:bg-white/5 hover:text-white transition-colors"
-                  >
-                    <Home size={16} />
-                    Home
-                  </Link>
-                </div>
               </nav>
             </aside>
 
@@ -119,6 +117,13 @@ export default function AdminLayout() {
 
                {mobileOpen && (
                  <div className="absolute inset-x-0 top-full border-b border-white/10 bg-[#100520] px-2 py-3 shadow-2xl shadow-black/30 md:hidden">
+                   <Link
+                     to="/"
+                     onClick={() => setMobileOpen(false)}
+                     className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white"
+                   >
+                     <Home size={16} /> Home <ChevronRight size={14} className="ml-auto opacity-40" />
+                   </Link>
                   {ADMIN_NAV.map(({ label, to, icon: Icon }) => (
                     <Link
                       key={to}
@@ -129,15 +134,6 @@ export default function AdminLayout() {
                       <Icon size={16} /> {label} <ChevronRight size={14} className="ml-auto opacity-40" />
                     </Link>
                   ))}
-                  <div className="mt-1 border-t border-white/10 pt-1">
-                    <Link
-                      to="/"
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white"
-                    >
-                      <Home size={16} /> Home <ChevronRight size={14} className="ml-auto opacity-40" />
-                    </Link>
-                  </div>
                 </div>
                )}
                </div>
