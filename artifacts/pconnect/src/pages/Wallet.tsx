@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation, useAction } from "@/lib/pconnect-api.ts";
 import { toast } from "sonner";
 import {
   Wallet, ArrowDownCircle, Clock, CheckCircle2, AlertCircle,
-  Eye, EyeOff, Building2, CreditCard, Copy, Timer, RefreshCw, Zap,
+  Eye, EyeOff, Building2, CreditCard, Copy, Zap,
 } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { api } from "@/lib/pconnect-api.ts";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -34,7 +34,7 @@ type FlutterwaveConfig = {
   onclose: () => void;
 };
 
-type PaymentMethod = "bank" | "card" | null;
+type PaymentMethod = "card" | null;
 
 type WalletTransaction = {
   _id: string;
@@ -69,24 +69,6 @@ function useFlutterwaveScript() {
   return loaded;
 }
 
-function useCountdown(expiresAt: string | null) {
-  const [remaining, setRemaining] = useState(0);
-  useEffect(() => {
-    if (!expiresAt) { setRemaining(0); return; }
-    const calc = () => Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
-    setRemaining(calc());
-    const id = setInterval(() => setRemaining(calc()), 1000);
-    return () => clearInterval(id);
-  }, [expiresAt]);
-  return remaining;
-}
-
-function formatCountdown(secs: number) {
-  const m = Math.floor(secs / 60).toString().padStart(2, "0");
-  const s = (secs % 60).toString().padStart(2, "0");
-  return `${m}:${s}`;
-}
-
 function AccountRow({ label, value, onCopy, highlight }: { label: string; value: string; onCopy?: () => void; highlight?: boolean }) {
   return (
     <div className="flex items-center justify-between px-5 py-4 gap-3">
@@ -100,128 +82,6 @@ function AccountRow({ label, value, onCopy, highlight }: { label: string; value:
         )}
       </div>
     </div>
-  );
-}
-
-function BankTransferPanel({ amount, reference, onSuccess, onCancel }: {
-  amount: number; reference: string; onSuccess: () => void; onCancel: () => void;
-}) {
-  const createVirtualAccount = useAction(api.wallet.deposits.createVirtualAccount);
-  const pollBankTransfer = useAction(api.wallet.deposits.pollBankTransfer);
-  const [va, setVa] = useState<VirtualAccount | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [verifying, setVerifying] = useState(false);
-  const [pollStatus, setPollStatus] = useState<"idle" | "checking" | "notfound">("idle");
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const remaining = useCountdown(va?.expiresAt ?? null);
-  const expired = va !== null && remaining === 0;
-
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const data = await createVirtualAccount({ reference });
-        if (!cancelled) setVa(data);
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Could not generate account");
-        if (!cancelled) onCancel();
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [reference]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (!va || expired) return;
-    pollingRef.current = setInterval(() => {
-      void pollBankTransfer({ reference }).then(res => {
-        if (res.status === "successful") {
-          clearInterval(pollingRef.current!);
-          toast.success("Payment confirmed! Wallet funded.");
-          onSuccess();
-        }
-      }).catch(() => { /* silent */ });
-    }, 15_000);
-    return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
-  }, [va, expired]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleIHavePaid = async () => {
-    setVerifying(true); setPollStatus("checking");
-    try {
-      const res = await pollBankTransfer({ reference });
-      if (res.status === "successful") {
-        toast.success("Payment confirmed! Wallet funded.");
-        onSuccess();
-      } else {
-        setPollStatus("notfound");
-        toast.error("Payment not detected yet. Please wait and try again.");
-      }
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Verification error"); setPollStatus("notfound");
-    } finally { setVerifying(false); }
-  };
-
-  const copy = (text: string, label: string) => { void navigator.clipboard.writeText(text); toast.success(`${label} copied!`); };
-
-  if (loading) return (
-    <div className="flex flex-col items-center gap-4 py-10">
-      <div className="size-12 animate-spin rounded-full border-2 border-[#7519e9] border-t-transparent" />
-      <p className="text-sm text-white/50">Generating your virtual account…</p>
-    </div>
-  );
-  if (!va) return null;
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#7519e9] to-[#df20ba] p-5 text-center">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.12),transparent_60%)]" />
-        <p className="text-xs text-white/70 mb-1 uppercase tracking-widest">Transfer exactly</p>
-        <p className="text-4xl font-extrabold text-white drop-shadow">{formatNaira(amount)}</p>
-        <p className="text-xs text-white/60 mt-1">Any other amount will not be credited automatically</p>
-      </div>
-      <div className="rounded-2xl border border-[#7519e9]/30 bg-gradient-to-b from-[#1a0b30] to-[#0e0620] divide-y divide-white/5 overflow-hidden">
-        <AccountRow label="Bank Name" value={va.bankName} />
-        <AccountRow label="Account Number" value={va.accountNumber} onCopy={() => copy(va.accountNumber, "Account number")} highlight />
-        <AccountRow label="Account Name" value={va.accountName} />
-      </div>
-      <div className={`flex items-center justify-between rounded-2xl border px-5 py-3.5 ${
-        expired ? "border-red-500/30 bg-red-500/10"
-        : remaining < 300 ? "border-amber-500/30 bg-amber-500/10"
-        : "border-[#7519e9]/20 bg-[#7519e9]/5"
-      }`}>
-        <div className="flex items-center gap-2">
-          <Timer size={15} className={expired ? "text-red-400" : remaining < 300 ? "text-amber-400" : "text-purple-400"} />
-          <span className="text-sm text-white/60">{expired ? "Account expired" : "Expires in"}</span>
-        </div>
-        <span className={`font-mono font-bold text-xl tracking-widest ${expired ? "text-red-400" : remaining < 300 ? "text-amber-400" : "text-white"}`}>
-          {expired ? "00:00" : formatCountdown(remaining)}
-        </span>
-      </div>
-      {expired ? (
-        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-5 text-center text-sm text-red-300">
-          This account has expired.
-          <button onClick={onCancel} className="block mx-auto mt-2 text-xs underline cursor-pointer text-red-400 hover:text-red-300">Start a new deposit</button>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <Button variant="glossy" className="w-full h-12 text-base font-semibold" disabled={verifying} onClick={() => void handleIHavePaid()}>
-            {verifying
-              ? <><div className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Checking payment…</>
-              : <><CheckCircle2 size={16} /> I Have Paid</>}
-          </Button>
-          {pollStatus === "notfound" && (
-            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-xs text-amber-300 flex items-start gap-2">
-              <AlertCircle size={14} className="mt-0.5 shrink-0" />
-              <span>Payment not confirmed yet. Bank transfers take 1–5 minutes. Keep this page open and try again shortly.</span>
-            </div>
-          )}
-          <button onClick={onCancel} className="w-full text-xs text-white/30 hover:text-white/60 cursor-pointer transition-colors py-1">
-            Cancel — choose a different method
-          </button>
-        </div>
-      )}
-    </motion.div>
   );
 }
 
@@ -240,9 +100,7 @@ function WalletInner() {
   const [amount, setAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(null);
   const [balanceHidden, setBalanceHidden] = useState(false);
-  const [bankSession, setBankSession] = useState<{ reference: string; amount: number } | null>(null);
   const [preparingCard, setPreparingCard] = useState(false);
-  const [preparingBank, setPreparingBank] = useState(false);
   const [showAccountSetup, setShowAccountSetup] = useState(false);
   const [identityType, setIdentityType] = useState<"bvn" | "nin">("bvn");
   const [identityNumber, setIdentityNumber] = useState("");
@@ -259,18 +117,6 @@ function WalletInner() {
   const handleSelectMethod = (method: PaymentMethod) => {
     if (!validAmount) { toast.error("Enter a valid amount (minimum ₦100) first"); return; }
     setPaymentMethod(method);
-  };
-
-  const handleStartBank = async () => {
-    if (!validAmount) return;
-    if (!publicKey) { toast.error("Flutterwave not configured yet. Contact admin."); return; }
-    setPreparingBank(true);
-    try {
-      const result = await createPending({ amount: parsedAmount });
-      setBankSession({ reference: result.reference, amount: parsedAmount });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to initiate deposit");
-    } finally { setPreparingBank(false); }
   };
 
   const handleStartCard = useCallback(async () => {
@@ -390,7 +236,7 @@ function WalletInner() {
             {QUICK_AMOUNTS.map((a) => (
               <button
                 key={a}
-                onClick={() => { setAmount(String(a)); setPaymentMethod(null); setBankSession(null); }}
+                onClick={() => { setAmount(String(a)); setPaymentMethod(null); }}
                 className={`cursor-pointer rounded-xl border px-4 py-2 text-sm font-semibold transition-all duration-200 ${
                   amount === String(a)
                     ? "border-[#7519e9] bg-gradient-to-r from-[#7519e9]/30 to-[#df20ba]/20 text-purple-200 shadow-[0_0_12px_rgba(117,25,233,0.3)]"
@@ -408,7 +254,7 @@ function WalletInner() {
               min={100}
               placeholder="Enter custom amount"
               value={amount}
-              onChange={(e) => { setAmount(e.target.value); setPaymentMethod(null); setBankSession(null); }}
+              onChange={(e) => { setAmount(e.target.value); setPaymentMethod(null); }}
               className="w-full rounded-2xl border border-white/10 bg-white/[0.04] pl-9 pr-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:border-[#7519e9]/60 focus:ring-1 focus:ring-[#7519e9]/40 transition-all"
             />
           </div>
@@ -418,92 +264,37 @@ function WalletInner() {
             </p>
           )}
         </div>
-        <AnimatePresence>
-          {!bankSession && (
-            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} className="px-6 pb-6">
-              <p className="text-[11px] font-bold text-white/30 uppercase tracking-[0.15em] mb-3">Select Payment Method</p>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => handleSelectMethod("bank")}
-                  className={`cursor-pointer group text-left rounded-2xl border p-4 transition-all duration-200 ${
-                    paymentMethod === "bank"
-                      ? "border-[#7519e9] bg-gradient-to-br from-[#7519e9]/25 to-[#b20ed2]/15 shadow-[0_0_24px_rgba(117,25,233,0.3)]"
-                      : "border-white/8 bg-white/[0.03] hover:border-[#7519e9]/50 hover:bg-[#7519e9]/8"
-                  }`}
-                >
-                  <div className={`mb-3 flex size-11 items-center justify-center rounded-xl border transition-all ${
-                    paymentMethod === "bank" ? "border-[#7519e9]/50 bg-[#7519e9]/30" : "border-white/8 bg-white/5 group-hover:border-[#7519e9]/40 group-hover:bg-[#7519e9]/15"
-                  }`}>
-                    <Building2 size={18} className={paymentMethod === "bank" ? "text-purple-300" : "text-white/40 group-hover:text-purple-300"} />
-                  </div>
-                  <div className="font-bold text-sm text-white">Bank Transfer</div>
-                  <div className="mt-0.5 text-xs text-white/40 leading-relaxed">Virtual account from any bank</div>
-                  {paymentMethod === "bank" && <div className="mt-2.5 flex items-center gap-1 text-xs text-purple-300 font-medium"><CheckCircle2 size={11} /> Selected</div>}
-                </button>
-                <button
-                  onClick={() => handleSelectMethod("card")}
-                  className={`cursor-pointer group text-left rounded-2xl border p-4 transition-all duration-200 ${
-                    paymentMethod === "card"
-                      ? "border-[#df20ba] bg-gradient-to-br from-[#df20ba]/20 to-[#7519e9]/15 shadow-[0_0_24px_rgba(223,32,186,0.25)]"
-                      : "border-white/8 bg-white/[0.03] hover:border-[#df20ba]/50 hover:bg-[#df20ba]/8"
-                  }`}
-                >
-                  <div className={`mb-3 flex size-11 items-center justify-center rounded-xl border transition-all ${
-                    paymentMethod === "card" ? "border-[#df20ba]/50 bg-[#df20ba]/25" : "border-white/8 bg-white/5 group-hover:border-[#df20ba]/40 group-hover:bg-[#df20ba]/15"
-                  }`}>
-                    <CreditCard size={18} className={paymentMethod === "card" ? "text-pink-300" : "text-white/40 group-hover:text-pink-300"} />
-                  </div>
-                  <div className="font-bold text-sm text-white">Card Payment</div>
-                  <div className="mt-0.5 text-xs text-white/40 leading-relaxed">Debit / credit via Flutterwave</div>
-                  {paymentMethod === "card" && <div className="mt-2.5 flex items-center gap-1 text-xs text-pink-300 font-medium"><CheckCircle2 size={11} /> Selected</div>}
-                </button>
+        <div className="px-6 pb-6">
+          <p className="text-[11px] font-bold text-white/30 uppercase tracking-[0.15em] mb-3">Payment Method</p>
+          <button
+            onClick={() => handleSelectMethod("card")}
+            className={`group w-full cursor-pointer rounded-2xl border p-4 text-left transition-all duration-200 ${
+              paymentMethod === "card"
+                ? "border-[#df20ba] bg-gradient-to-br from-[#df20ba]/20 to-[#7519e9]/15 shadow-[0_0_24px_rgba(223,32,186,0.25)]"
+                : "border-white/8 bg-white/[0.03] hover:border-[#df20ba]/50 hover:bg-[#df20ba]/8"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`flex size-11 shrink-0 items-center justify-center rounded-xl border transition-all ${
+                paymentMethod === "card" ? "border-[#df20ba]/50 bg-[#df20ba]/25" : "border-white/8 bg-white/5 group-hover:border-[#df20ba]/40 group-hover:bg-[#df20ba]/15"
+              }`}>
+                <CreditCard size={18} className={paymentMethod === "card" ? "text-pink-300" : "text-white/40 group-hover:text-pink-300"} />
               </div>
-              <AnimatePresence>
-                {paymentMethod === "bank" && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-4">
-                    <Button variant="glossy" className="w-full h-12 text-sm font-bold" disabled={preparingBank} onClick={() => void handleStartBank()}>
-                      {preparingBank ? <><div className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Generating account…</> : <><Building2 size={15} /> Get Account Number — {formatNaira(parsedAmount || 0)}</>}
-                    </Button>
-                  </motion.div>
-                )}
-                {paymentMethod === "card" && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-4">
-                    <Button variant="glossy" className="w-full h-12 text-sm font-bold bg-gradient-to-r from-[#df20ba] to-[#7519e9]" disabled={preparingCard || !scriptLoaded} onClick={() => void handleStartCard()}>
-                      {preparingCard ? <><div className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Opening…</> : <><CreditCard size={15} /> Pay with Card — {formatNaira(parsedAmount || 0)}</>}
-                    </Button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <div className="min-w-0">
+                <div className="font-bold text-sm text-white">Card Payment</div>
+                <div className="mt-0.5 text-xs text-white/40 leading-relaxed">Debit / credit via Flutterwave</div>
+              </div>
+              {paymentMethod === "card" && <div className="ml-auto flex shrink-0 items-center gap-1 text-xs font-medium text-pink-300"><CheckCircle2 size={11} /> Selected</div>}
+            </div>
+          </button>
+          {paymentMethod === "card" && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-4">
+              <Button variant="glossy" className="w-full h-12 text-sm font-bold bg-gradient-to-r from-[#df20ba] to-[#7519e9]" disabled={preparingCard || !scriptLoaded} onClick={() => void handleStartCard()}>
+                {preparingCard ? <><div className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Opening…</> : <><CreditCard size={15} /> Pay with Card — {formatNaira(parsedAmount || 0)}</>}
+              </Button>
             </motion.div>
           )}
-        </AnimatePresence>
-        <AnimatePresence>
-          {bankSession && (
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="px-6 pb-6">
-              <div className="mb-4 flex items-center gap-2">
-                <Building2 size={15} className="text-purple-400" />
-                <span className="text-sm font-bold text-white">Bank Transfer Details</span>
-                <button
-                  onClick={() => void (async () => {
-                    try {
-                      const r = await createPending({ amount: bankSession.amount });
-                      setBankSession({ reference: r.reference, amount: bankSession.amount });
-                    } catch { /* ignore */ }
-                  })()}
-                  className="ml-auto cursor-pointer flex items-center gap-1 text-xs text-white/30 hover:text-white/60 transition-colors"
-                >
-                  <RefreshCw size={11} /> New Account
-                </button>
-              </div>
-              <BankTransferPanel
-                amount={bankSession.amount}
-                reference={bankSession.reference}
-                onSuccess={() => { setBankSession(null); setAmount(""); setPaymentMethod(null); }}
-                onCancel={() => { setBankSession(null); setPaymentMethod(null); }}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        </div>
       </div>
 
       <div className="mt-8">
