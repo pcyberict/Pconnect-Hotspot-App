@@ -9,6 +9,8 @@ Primzy Connect sells hotspot internet vouchers, manages wallet deposits, and pro
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/db run push` — apply the Drizzle schema to development PostgreSQL
+- Admin Analytics is available at `/admin/analytics` with period filters, a revenue trend, purchase details, and CSV export.
+- Weekly reports are sent to every admin email on Mondays; monthly reports are sent on the first day of each month. Both use the configured SMTP settings and include revenue less welcome bonuses and referral commissions.
 - Required env: `DATABASE_URL` — the provisioned PostgreSQL connection string
 - Demo session: the web app uses the `demo-user` token; the seeded demo admin has a ₦2,500 wallet balance.
 - The combined Docker deployment bootstraps the PostgreSQL schema and idempotent demo data before starting the API.

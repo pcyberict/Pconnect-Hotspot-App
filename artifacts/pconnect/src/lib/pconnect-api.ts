@@ -64,6 +64,7 @@ export const api = {
     getMine: endpoint("referrals.getMine"),
     getAdmin: endpoint("referrals.getAdmin"),
   },
+  analytics: { getAdmin: endpoint("analytics.getAdmin") },
 };
 
 const API_BASE = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/api`;
@@ -116,6 +117,7 @@ async function request(fn: Endpoint, args: Args = {}, method: "GET" | "POST" = "
     "notifications.markAllRead": "notifications/read-all",
     "referrals.getMine": "referrals",
     "referrals.getAdmin": "admin/referrals",
+    "analytics.getAdmin": "admin/analytics",
   };
   const url = `${API_BASE}/${paths[fn] ?? fn}${method === "GET" && params.size ? `?${params}` : ""}`;
   const controller = new AbortController();

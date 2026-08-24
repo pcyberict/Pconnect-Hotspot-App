@@ -10,6 +10,7 @@ import AdminUsers from "./pages/admin/AdminUsers.tsx";
 import AdminSettings from "./pages/admin/AdminSettings.tsx";
 import AdminBonus from "./pages/admin/AdminBonus.tsx";
 import AdminReferrals from "./pages/admin/AdminReferrals.tsx";
+import AdminAnalytics from "./pages/admin/AdminAnalytics.tsx";
 import AuthCallback from "./pages/auth/Callback.tsx";
 import AdminLogin from "./pages/admin/AdminLogin.tsx";
 import Index from "./pages/Index.tsx";
@@ -48,6 +49,7 @@ export default function App() {
             <Route path="settings" element={<AdminSettings />} />
             <Route path="bonus" element={<AdminBonus />} />
             <Route path="referrals" element={<AdminReferrals />} />
+            <Route path="analytics" element={<AdminAnalytics />} />
           </Route>
           <Route element={<AppLayout />}>
             <Route path="/" element={<Index />} />

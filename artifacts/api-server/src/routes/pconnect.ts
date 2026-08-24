@@ -2,6 +2,7 @@ import { Router } from "express";
 import { pool } from "@workspace/db";
 import { createHash, randomBytes, randomInt, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { emailLayout, sendEmail } from "../lib/mailer";
+import { getAnalytics } from "../lib/analytics";
 
 const router = Router();
 const tokenFor = (req: { headers: Record<string, string | string[] | undefined> }) =>
@@ -868,6 +869,18 @@ router.get("/admin/stats", async (_req, res) => {
     (SELECT COUNT(*)::int FROM pconnect_purchases WHERE created_at >= CURRENT_DATE) AS "todaySales",
     (SELECT COALESCE(SUM(amount),0) FROM pconnect_purchases WHERE created_at >= CURRENT_DATE) AS "todayRevenue"`);
   res.json(result.rows[0]);
+});
+
+router.get("/admin/analytics", async (req, res) => {
+  const user = await currentUser(tokenFor(req));
+  if (!user || user.role !== "admin") return res.status(403).json({ error: "Admins only" });
+  try {
+    const from = typeof req.query.from === "string" ? req.query.from : undefined;
+    const to = typeof req.query.to === "string" ? req.query.to : undefined;
+    return res.json(await getAnalytics({ from, to }));
+  } catch {
+    return res.status(400).json({ error: "Analytics could not be loaded for that date range" });
+  }
 });
 
 router.get("/admin/referrals", async (_req, res) => {

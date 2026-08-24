@@ -1,6 +1,7 @@
 import app from "./app";
 import { bootstrapDatabase } from "./bootstrap";
 import { logger } from "./lib/logger";
+import { sendDueAnalyticsReports } from "./lib/reports";
 
 // Coolify uses PORT for the public container port (80 in the combined image).
 // Keep the API's internal port independently configurable.
@@ -20,6 +21,8 @@ if (Number.isNaN(port) || port <= 0) {
 
 await bootstrapDatabase();
 logger.info("Database schema and seed data are ready");
+void sendDueAnalyticsReports().catch((error) => logger.error({ err: error }, "Scheduled analytics report failed"));
+setInterval(() => void sendDueAnalyticsReports().catch((error) => logger.error({ err: error }, "Scheduled analytics report failed")), 60 * 60 * 1000);
 
 app.listen(port, (err) => {
   if (err) {
