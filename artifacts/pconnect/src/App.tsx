@@ -29,13 +29,14 @@ import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import Referrals from "./pages/Referrals.tsx";
 import CustomCodeInjector from "./components/custom-code-injector.tsx";
-import { useSiteFavicon } from "./lib/site-settings.ts";
+import { useSiteFavicon, useSiteMetadata } from "./lib/site-settings.ts";
 
-export default function App() {
+function AppContent() {
   useSiteFavicon();
+  useSiteMetadata();
 
   return (
-    <DefaultProviders>
+    <>
       <CustomCodeInjector />
       <BrowserRouter>
         <Routes>
@@ -67,11 +68,19 @@ export default function App() {
             <Route path="/wallet" element={<WalletPage />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/notifications" element={<NotificationsPage />} />
-             <Route path="/referrals" element={<Referrals />} />
+            <Route path="/referrals" element={<Referrals />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <DefaultProviders>
+      <AppContent />
     </DefaultProviders>
   );
 }
