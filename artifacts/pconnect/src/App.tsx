@@ -29,8 +29,11 @@ import ForgotPassword from "./pages/ForgotPassword.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import Referrals from "./pages/Referrals.tsx";
 import CustomCodeInjector from "./components/custom-code-injector.tsx";
+import { useSiteFavicon } from "./lib/site-settings.ts";
 
 export default function App() {
+  useSiteFavicon();
+
   return (
     <DefaultProviders>
       <CustomCodeInjector />
