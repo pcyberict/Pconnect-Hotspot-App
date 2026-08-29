@@ -3,7 +3,7 @@ import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation, use
 import { toast } from "sonner";
 import {
   Wallet, ArrowDownCircle, Clock, CheckCircle2, AlertCircle,
-  Eye, EyeOff, Building2, CreditCard, Copy, Zap,
+  Eye, EyeOff, Building2, CreditCard, Copy, Zap, ChevronDown,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { api } from "@/lib/pconnect-api.ts";
@@ -209,7 +209,42 @@ function WalletInner() {
       ) : (
         <div className="mt-5 rounded-3xl border border-[#7519e9]/25 bg-[#23103e]/60 p-6">
           <div className="flex items-center justify-between gap-3"><div className="flex items-center gap-3"><Building2 size={18} className="text-purple-300" /><div><h2 className="font-bold text-white">Get your permanent bank account</h2><p className="text-xs text-white/40">Generate bank details for easy wallet funding.</p></div></div><Button variant="secondary" onClick={() => setShowAccountSetup(value => !value)}><Building2 size={14} /> Generate</Button></div>
-          {showAccountSetup && <div className="mt-4 grid gap-3 sm:grid-cols-[140px_1fr_auto]"><select value={identityType} onChange={event => setIdentityType(event.target.value as "bvn" | "nin")} className="appearance-none rounded-xl border border-[#7519e9]/40 bg-[#23103e] px-3 text-sm text-white [color-scheme:dark]"><option className="bg-[#23103e] text-white" value="bvn">BVN</option><option className="bg-[#23103e] text-white" value="nin">NIN</option></select><input inputMode="numeric" maxLength={11} value={identityNumber} onChange={event => setIdentityNumber(event.target.value.replace(/\D/g, ""))} placeholder={`11-digit ${identityType.toUpperCase()}`} className="rounded-xl border border-white/10 bg-white/[0.04] px-3 text-sm text-white placeholder-white/25 outline-none" /><Button variant="glossy" disabled={identityNumber.length !== 11} onClick={() => void generateVirtualAccount({ identityType, identityNumber })}>Create account</Button></div>}
+          {showAccountSetup && (
+            <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-[140px_minmax(0,1fr)_auto]">
+              <div className="relative min-w-0">
+                <select
+                  aria-label="Identity document type"
+                  value={identityType}
+                  onChange={event => setIdentityType(event.target.value as "bvn" | "nin")}
+                  className="h-12 w-full min-w-0 appearance-none rounded-2xl border border-[#7519e9]/40 bg-[#23103e] px-4 pr-11 text-sm text-white outline-none focus:border-[#7519e9]/60 [color-scheme:dark]"
+                >
+                  <option className="bg-[#23103e] text-white" value="bvn">BVN</option>
+                  <option className="bg-[#23103e] text-white" value="nin">NIN</option>
+                </select>
+                <ChevronDown
+                  aria-hidden="true"
+                  className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-purple-300"
+                />
+              </div>
+              <input
+                aria-label={`${identityType.toUpperCase()} number`}
+                inputMode="numeric"
+                maxLength={11}
+                value={identityNumber}
+                onChange={event => setIdentityNumber(event.target.value.replace(/\D/g, ""))}
+                placeholder={`11-digit ${identityType.toUpperCase()}`}
+                className="h-12 w-full min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-white/25 outline-none focus:border-[#7519e9]/60 focus:ring-1 focus:ring-[#7519e9]/40"
+              />
+              <Button
+                variant="glossy"
+                className="h-12 w-full px-5 sm:w-auto"
+                disabled={identityNumber.length !== 11}
+                onClick={() => void generateVirtualAccount({ identityType, identityNumber })}
+              >
+                Create account
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

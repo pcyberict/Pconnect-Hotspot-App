@@ -18,15 +18,22 @@ run_api() {
 run_api &
 api_pid=$!
 
+inject_metadata() {
+  # Do not block the web server while PostgreSQL/API bootstrap completes.
+  # The script keeps fallback metadata when the API is unavailable.
+  node /app/scripts/inject-site-metadata.mjs
+}
+
+inject_metadata &
+metadata_pid=$!
+
 cleanup() {
   kill "$api_pid" 2>/dev/null || true
+  kill "$metadata_pid" 2>/dev/null || true
 }
 
 trap cleanup INT TERM EXIT
 
-# The frontend is built before the runtime API starts, so the build can only
-# contain fallback metadata. Wait for the initialized API and inject the saved
-# site name/tagline into the HTML that social crawlers receive.
-node /app/scripts/inject-site-metadata.mjs
-
+# The frontend is built before the runtime API starts, so it contains fallback
+# metadata initially. The background task replaces it once the API is ready.
 nginx -g "daemon off;"

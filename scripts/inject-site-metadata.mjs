@@ -1,4 +1,4 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, rename, writeFile } from "node:fs/promises";
 
 const htmlPath = process.env.METADATA_HTML_PATH ?? "/usr/share/nginx/html/index.html";
 const apiUrl = process.env.METADATA_API_URL ??
@@ -83,5 +83,7 @@ html = replaceMetaContent(html, /(<meta name="twitter:title" content=")[^"]*(" \
   siteName);
 html = replaceMetaContent(html, /(<meta name="twitter:description" content=")[^"]*(" \/>)/,
   description);
-await writeFile(htmlPath, html);
+const temporaryHtmlPath = `${htmlPath}.tmp`;
+await writeFile(temporaryHtmlPath, html);
+await rename(temporaryHtmlPath, htmlPath);
 console.log(`Injected site metadata for "${siteName}".`);
