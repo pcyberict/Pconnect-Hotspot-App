@@ -24,6 +24,9 @@ cleanup() {
 
 trap cleanup INT TERM EXIT
 
-sleep 1
+# The frontend is built before the runtime API starts, so the build can only
+# contain fallback metadata. Wait for the initialized API and inject the saved
+# site name/tagline into the HTML that social crawlers receive.
+node /app/scripts/inject-site-metadata.mjs
 
 nginx -g "daemon off;"

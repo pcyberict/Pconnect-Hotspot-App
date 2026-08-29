@@ -94,7 +94,7 @@ function WalletInner() {
   const verifyDeposit = useAction(api.wallet.deposits.verifyDepositById);
   const { user } = useAuth();
   const siteName = useSiteName();
-  const siteLogo = useSiteAsset("site_logo", "https://hercules-cdn.com/file_PDusWTTXoxwuVrGaJFbrGp0y");
+  const siteLogo = useSiteAsset("site_logo", "/images/site-logo.webp");
   const scriptLoaded = useFlutterwaveScript();
 
   const [amount, setAmount] = useState("");

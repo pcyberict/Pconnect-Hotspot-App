@@ -26,7 +26,7 @@ import { api, useConvexAuth, useMutation, useQuery } from "@/lib/pconnect-api.ts
 import { useSiteAsset, useSiteName } from "@/lib/site-settings.ts";
 import { getRegistrationUrl } from "@/lib/auth-redirect.ts";
 
-const DEFAULT_HERO_URL = "https://hercules-cdn.com/file_N4vw0dKasw7kaIkScQbfJFXL";
+const DEFAULT_HERO_URL = "/images/hero.webp";
 const DEFAULT_COMMUNITY_URL = "https://hercules-cdn.com/file_qfPEDBMPY2Zu03ym6A5vlo1C";
 
 const STATS = [
@@ -121,7 +121,17 @@ export default function Index() {
   return (
     <div className="bg-[#10051f]">
       <section className="relative flex min-h-[60vh] items-center justify-center overflow-hidden md:min-h-[80vh]">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${heroUrl})` }} />
+        <img
+          src={heroUrl}
+          alt=""
+          aria-hidden="true"
+          width={1280}
+          height={853}
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
+          className="absolute inset-0 h-full w-full object-cover object-center"
+        />
         <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(16,5,31,0.75) 0%, rgba(16,5,31,0.5) 50%, rgba(16,5,31,0.95) 100%)" }} />
         <div className="pointer-events-none absolute top-1/4 left-1/4 h-64 w-64 rounded-full bg-[#7519e9]/20 blur-3xl" />
         <div className="pointer-events-none absolute right-1/4 bottom-1/4 h-64 w-64 rounded-full bg-[#ff2549]/15 blur-3xl" />
@@ -260,6 +270,8 @@ export default function Index() {
             <img
               src={communityUrl}
               alt={`${siteName} community`}
+              loading="lazy"
+              decoding="async"
               className="absolute inset-0 h-full w-full object-cover object-center"
             />
             {/* Gradient overlay with glass effect */}

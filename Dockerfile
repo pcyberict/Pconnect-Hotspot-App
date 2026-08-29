@@ -36,6 +36,7 @@ RUN apt-get update \
 COPY nginx.pconnect.conf /etc/nginx/conf.d/pconnect.conf
 COPY --from=build /app/artifacts/pconnect/dist/public /usr/share/nginx/html
 COPY --from=build /app/artifacts/api-server/dist ./api-dist
+COPY scripts/inject-site-metadata.mjs /app/scripts/inject-site-metadata.mjs
 COPY docker-start.sh /usr/local/bin/docker-start.sh
 
 RUN chmod +x /usr/local/bin/docker-start.sh

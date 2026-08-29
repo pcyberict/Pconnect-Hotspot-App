@@ -44,16 +44,18 @@ async function getSiteMetadata() {
   try {
     const apiPort = process.env.API_PORT ?? "8080";
     const response = await fetch(`http://127.0.0.1:${apiPort}/api/settings`, {
-      signal: AbortSignal.timeout(1000),
+      signal: AbortSignal.timeout(5000),
     });
     if (!response.ok) return { siteName: defaultSiteName, tagline: defaultSiteTagline };
     const settings = await response.json() as Record<string, unknown>;
     return {
-      siteName: typeof settings.site_name === "string" && settings.site_name.trim()
-        ? settings.site_name.trim()
+      siteName: typeof (settings.site_name ?? settings.site_title) === "string" &&
+        String(settings.site_name ?? settings.site_title).trim()
+        ? String(settings.site_name ?? settings.site_title).trim()
         : defaultSiteName,
-      tagline: typeof settings.site_tagline === "string" && settings.site_tagline.trim()
-        ? settings.site_tagline.trim()
+      tagline: typeof (settings.site_tagline ?? settings.site_description) === "string" &&
+        String(settings.site_tagline ?? settings.site_description).trim()
+        ? String(settings.site_tagline ?? settings.site_description).trim()
         : defaultSiteTagline,
     };
   } catch {
@@ -66,14 +68,26 @@ function siteMetadataPlugin() {
     name: "pconnect-site-metadata",
     async transformIndexHtml(html: string) {
       const { siteName, tagline } = await getSiteMetadata();
-      const title = escapeHtml(siteName);
-      const description = escapeHtml(tagline);
       return html
-        .replace(/<title>.*?<\/title>/, `<title>${title}</title>`)
-        .replace(/(<meta name="description" content=")[^"]*(" \/>)/, `$1${description}$2`)
-        .replace(/(<meta name="author" content=")[^"]*(" \/>)/, `$1${title}$2`)
-        .replace(/(<meta property="og:title" content=")[^"]*(" \/>)/, `$1${title}$2`)
-        .replace(/(<meta property="og:description" content=")[^"]*(" \/>)/, `$1${description}$2`);
+        .replace(/<title>.*?<\/title>/, `<title>${escapeHtml(siteName)}</title>`)
+        .replace(/(<meta name="description" content=")[^"]*(" \/>)/,
+          (_match, prefix: string, suffix: string) =>
+            `${prefix}${escapeHtml(tagline)}${suffix}`)
+        .replace(/(<meta name="author" content=")[^"]*(" \/>)/,
+          (_match, prefix: string, suffix: string) =>
+            `${prefix}${escapeHtml(siteName)}${suffix}`)
+        .replace(/(<meta property="og:title" content=")[^"]*(" \/>)/,
+          (_match, prefix: string, suffix: string) =>
+            `${prefix}${escapeHtml(siteName)}${suffix}`)
+        .replace(/(<meta property="og:description" content=")[^"]*(" \/>)/,
+          (_match, prefix: string, suffix: string) =>
+            `${prefix}${escapeHtml(tagline)}${suffix}`)
+        .replace(/(<meta name="twitter:title" content=")[^"]*(" \/>)/,
+          (_match, prefix: string, suffix: string) =>
+            `${prefix}${escapeHtml(siteName)}${suffix}`)
+        .replace(/(<meta name="twitter:description" content=")[^"]*(" \/>)/,
+          (_match, prefix: string, suffix: string) =>
+            `${prefix}${escapeHtml(tagline)}${suffix}`);
     },
   };
 }
