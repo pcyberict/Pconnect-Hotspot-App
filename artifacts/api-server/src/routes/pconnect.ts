@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { pool } from "@workspace/db";
-import { createHash, randomBytes, randomInt, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomBytes, randomInt, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { emailLayout, sendEmail } from "../lib/mailer";
 import { getAnalytics } from "../lib/analytics";
 
@@ -36,6 +36,28 @@ function passwordMatches(password: string, stored: string | null | undefined) {
 
 function hashValue(value: string) {
   return createHash("sha256").update(value).digest("hex");
+}
+
+function matchesSecret(expected: string, received: string) {
+  const expectedBuffer = Buffer.from(expected);
+  const receivedBuffer = Buffer.from(received);
+  return expectedBuffer.length === receivedBuffer.length &&
+    timingSafeEqual(expectedBuffer, receivedBuffer);
+}
+
+function flutterwaveSignature(req: { headers: Record<string, string | string[] | undefined>; rawBody?: Buffer }, secret: string) {
+  const currentSignature = req.headers["flutterwave-signature"];
+  if (typeof currentSignature === "string" && currentSignature.trim()) {
+    const rawBody = req.rawBody;
+    if (!rawBody) return false;
+    const expectedSignature = createHmac("sha256", secret).update(rawBody).digest("base64");
+    return matchesSecret(expectedSignature, currentSignature.trim());
+  }
+
+  // Keep compatibility with older Flutterwave webhook configurations that
+  // send the configured value directly in the verif-hash header.
+  const legacyHash = req.headers["verif-hash"];
+  return typeof legacyHash === "string" && matchesSecret(secret, legacyHash.trim());
 }
 
 const referralCodeAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -416,14 +438,28 @@ router.post("/wallet/virtual-account", async (req, res) => {
 
 router.post("/webhooks/flutterwave", async (req, res) => {
   const expectedHash = String((await pool.query("SELECT value FROM pconnect_site_settings WHERE key='flutterwave_webhook_hash'")).rows[0]?.value ?? "");
-  const receivedHash = String(req.headers["verif-hash"] ?? "");
-  if (!expectedHash || !receivedHash || receivedHash !== expectedHash) return res.status(401).json({ error: "Invalid webhook signature" });
+  if (!expectedHash || !flutterwaveSignature(req as typeof req & { rawBody?: Buffer }, expectedHash)) {
+    req.log.warn({
+      hasConfiguredHash: Boolean(expectedHash),
+      hasCurrentSignature: typeof req.headers["flutterwave-signature"] === "string",
+      hasLegacyHash: typeof req.headers["verif-hash"] === "string",
+    }, "Rejected Flutterwave webhook signature");
+    return res.status(401).json({ error: "Invalid webhook signature" });
+  }
   const data = req.body?.data ?? {};
   if (String(data.status ?? "").toLowerCase() !== "successful") return res.json({ received: true });
   const accountNumber = String(data.account_number ?? data.accountNumber ?? "");
   const amount = Number(data.amount);
   const providerTransactionId = String(data.id ?? data.flw_ref ?? "");
-  if (!accountNumber || !Number.isFinite(amount) || amount <= 0 || !providerTransactionId) return res.status(400).json({ error: "Incomplete payment event" });
+  if (!accountNumber || !Number.isFinite(amount) || amount <= 0 || !providerTransactionId) {
+    req.log.warn({
+      eventStatus: data.status,
+      hasAccountNumber: Boolean(accountNumber),
+      amount,
+      hasProviderTransactionId: Boolean(providerTransactionId),
+    }, "Flutterwave webhook did not contain a creditable transfer");
+    return res.status(400).json({ error: "Incomplete payment event" });
+  }
 
   const client = await pool.connect();
   try {
@@ -433,6 +469,7 @@ router.post("/webhooks/flutterwave", async (req, res) => {
     )).rows[0];
     if (!wallet) {
       await client.query("ROLLBACK");
+      req.log.warn({ accountNumber, providerTransactionId }, "Flutterwave transfer did not match a saved virtual account");
       return res.status(404).json({ error: "Virtual account not found" });
     }
     const duplicate = (await client.query(
@@ -455,6 +492,7 @@ router.post("/webhooks/flutterwave", async (req, res) => {
       VALUES ($1,'Wallet funded successfully',$2,'wallet')`,
       [wallet.user_id, `${amount.toLocaleString("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 })} has been added to your wallet.`]);
     await client.query("COMMIT");
+    req.log.info({ accountNumber, amount, providerTransactionId, userId: wallet.user_id }, "Credited wallet from Flutterwave transfer");
     return res.json({ received: true });
   } catch (error) {
     await client.query("ROLLBACK");

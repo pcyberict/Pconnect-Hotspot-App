@@ -28,7 +28,14 @@ app.use(
 app.use(cors());
 // Site image settings are sent as data URLs when an admin uploads an image.
 // Allow the documented 5MB image limit plus base64/request overhead.
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({
+  limit: "10mb",
+  verify: (req, _res, buffer) => {
+    // Flutterwave signs the exact JSON bytes it sends. Keep a copy before
+    // express.json parses the request so the webhook can verify the signature.
+    (req as typeof req & { rawBody?: Buffer }).rawBody = Buffer.from(buffer);
+  },
+}));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // API responses contain authenticated and frequently changing application
