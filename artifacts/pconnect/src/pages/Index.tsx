@@ -25,6 +25,7 @@ import WhatsAppIcon from "@/components/whatsapp-icon.tsx";
 import { api, useConvexAuth, useMutation, useQuery } from "@/lib/pconnect-api.ts";
 import { useSiteAsset, useSiteName } from "@/lib/site-settings.ts";
 import { getRegistrationUrl } from "@/lib/auth-redirect.ts";
+import { useDeferredImage } from "@/lib/deferred-image.ts";
 
 const DEFAULT_HERO_URL = "/images/hero.webp";
 const DEFAULT_COMMUNITY_URL = "https://hercules-cdn.com/file_qfPEDBMPY2Zu03ym6A5vlo1C";
@@ -94,6 +95,7 @@ export default function Index() {
   const siteName = useSiteName();
   const heroUrl = useSiteAsset("hero_banner", DEFAULT_HERO_URL);
   const communityUrl = useSiteAsset("community_banner", DEFAULT_COMMUNITY_URL);
+  const loadHeroImage = useDeferredImage();
   const plans = useQuery<HomePlan[]>(api.voucherPlans.listActivePlans, {});
   const purchaseVoucher = useMutation(api.vouchers.purchaseVoucher);
   const [buyingPlan, setBuyingPlan] = useState<string | null>(null);
@@ -121,17 +123,19 @@ export default function Index() {
   return (
     <div className="bg-[#10051f]">
       <section className="relative flex min-h-[60vh] items-center justify-center overflow-hidden md:min-h-[80vh]">
-        <img
-          src={heroUrl}
-          alt=""
-          aria-hidden="true"
-          width={1280}
-          height={853}
-          loading="eager"
-          decoding="async"
-          fetchPriority="high"
-          className="absolute inset-0 h-full w-full object-cover object-center"
-        />
+        {loadHeroImage && (
+          <img
+            src={heroUrl}
+            alt=""
+            aria-hidden="true"
+            width={1280}
+            height={853}
+            loading="lazy"
+            decoding="async"
+            fetchPriority="low"
+            className="absolute inset-0 h-full w-full object-cover object-center"
+          />
+        )}
         <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(16,5,31,0.75) 0%, rgba(16,5,31,0.5) 50%, rgba(16,5,31,0.95) 100%)" }} />
         <div className="pointer-events-none absolute top-1/4 left-1/4 h-64 w-64 rounded-full bg-[#7519e9]/20 blur-3xl" />
         <div className="pointer-events-none absolute right-1/4 bottom-1/4 h-64 w-64 rounded-full bg-[#ff2549]/15 blur-3xl" />

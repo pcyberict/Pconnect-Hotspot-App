@@ -17,6 +17,13 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
+# Compress packaged WebP assets in the build stage only. The runtime image
+# does not need to carry the image conversion tool.
+RUN apt-get update \
+  && apt-get install --no-install-recommends -y webp \
+  && sh scripts/compress-static-images.sh artifacts/pconnect/public \
+  && rm -rf /var/lib/apt/lists/*
+
 RUN PORT=20402 BASE_PATH=/ NODE_ENV=production \
   pnpm --filter @workspace/pconnect run build
 

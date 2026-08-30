@@ -8,6 +8,7 @@ import SiteFooter from "@/components/site-footer.tsx";
 import WhatsAppIcon from "@/components/whatsapp-icon.tsx";
 import { useSiteAsset, useSiteName } from "@/lib/site-settings.ts";
 import { getPostAuthDestination } from "@/lib/auth-redirect.ts";
+import { useDeferredImage } from "@/lib/deferred-image.ts";
 
 const DEFAULT_LOGIN_LOGO = "/images/login-logo.webp";
 const DEFAULT_LOGIN_BG = "/images/login-bg.webp";
@@ -21,6 +22,7 @@ export default function Login({ registrationOnly = false }: LoginProps) {
   const { login, register, isLoading } = useAuth();
   const siteName = useSiteName();
   const loginLogo = useSiteAsset("login_logo", DEFAULT_LOGIN_LOGO);
+  const loadBackgroundImage = useDeferredImage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [tab, setTab] = useState<"login" | "register">(
@@ -77,17 +79,19 @@ export default function Login({ registrationOnly = false }: LoginProps) {
       <div
         className="flex-1 flex items-center justify-center overflow-hidden bg-cover bg-center bg-no-repeat relative py-12"
       >
-        <img
-          src={DEFAULT_LOGIN_BG}
-          alt=""
-          aria-hidden="true"
-          width={1280}
-          height={853}
-          loading="eager"
-          decoding="async"
-          fetchPriority="high"
-          className="absolute inset-0 h-full w-full object-cover object-center"
-        />
+        {loadBackgroundImage && (
+          <img
+            src={DEFAULT_LOGIN_BG}
+            alt=""
+            aria-hidden="true"
+            width={1280}
+            height={853}
+            loading="lazy"
+            decoding="async"
+            fetchPriority="low"
+            className="absolute inset-0 h-full w-full object-cover object-center"
+          />
+        )}
         <div className="absolute inset-0 bg-black/40" />
         <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[#7519e9]/20 blur-[120px] pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-[#df20ba]/15 blur-[100px] pointer-events-none" />
