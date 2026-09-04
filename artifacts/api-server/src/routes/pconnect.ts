@@ -320,6 +320,14 @@ router.post("/auth/login", async (req, res) => {
   }
 });
 
+router.post("/auth/logout", async (req, res) => {
+  const token = tokenFor(req);
+  if (token) {
+    await pool.query("UPDATE pconnect_users SET token_identifier=$1 WHERE token_identifier=$2", [randomUUID(), token]);
+  }
+  return res.json({ ok: true });
+});
+
 router.get("/plans", async (_req, res) => {
   const result = await pool.query(`
     SELECT p.*, COUNT(v.id) FILTER (WHERE v.status = 'available')::int AS "availableCount",
