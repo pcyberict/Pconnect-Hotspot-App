@@ -1,4 +1,5 @@
 import { api, useQuery } from "@/lib/pconnect-api.ts";
+import { DEFAULT_WHATSAPP_SUPPORT_NUMBER, getWhatsAppSupportUrl } from "@/lib/whatsapp.ts";
 import { useEffect } from "react";
 
 export const DEFAULT_SITE_NAME = "PCYBER CONNECT";
@@ -33,6 +34,11 @@ export function useSiteAsset(key: string, fallback: string) {
 
 export function useWhatsAppGroupUrl() {
   return useSiteAsset("whatsapp_group_url", DEFAULT_WHATSAPP_GROUP_URL);
+}
+
+export function useWhatsAppSupportUrl(message?: string) {
+  const supportNumber = useSiteAsset("whatsapp_support_number", DEFAULT_WHATSAPP_SUPPORT_NUMBER);
+  return getWhatsAppSupportUrl(supportNumber, message);
 }
 
 export function useSiteFavicon() {
