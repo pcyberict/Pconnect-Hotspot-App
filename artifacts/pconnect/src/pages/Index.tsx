@@ -20,10 +20,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { formatNaira } from "@/lib/plans.ts";
-import { WHATSAPP_GROUP_URL } from "@/lib/whatsapp.ts";
 import WhatsAppIcon from "@/components/whatsapp-icon.tsx";
 import { api, useConvexAuth, useMutation, useQuery } from "@/lib/pconnect-api.ts";
-import { useSiteAsset, useSiteName } from "@/lib/site-settings.ts";
+import { useSiteAsset, useSiteName, useWhatsAppGroupUrl } from "@/lib/site-settings.ts";
 import { getRegistrationUrl } from "@/lib/auth-redirect.ts";
 import { useDeferredImage } from "@/lib/deferred-image.ts";
 
@@ -95,6 +94,7 @@ export default function Index() {
   const siteName = useSiteName();
   const heroUrl = useSiteAsset("hero_banner", DEFAULT_HERO_URL);
   const communityUrl = useSiteAsset("community_banner", DEFAULT_COMMUNITY_URL);
+  const whatsappGroupUrl = useWhatsAppGroupUrl();
   const loadHeroImage = useDeferredImage();
   const plans = useQuery<HomePlan[]>(api.voucherPlans.listActivePlans, {});
   const purchaseVoucher = useMutation(api.vouchers.purchaseVoucher);
@@ -157,7 +157,7 @@ export default function Index() {
                 <Link to={fundWalletUrl}><Wallet size={18} /> Fund Wallet</Link>
               </Button>
             </div>
-            <a href={WHATSAPP_GROUP_URL} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex cursor-pointer items-center gap-2 text-sm text-white/80 transition-colors hover:text-white">
+            <a href={whatsappGroupUrl} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex cursor-pointer items-center gap-2 text-sm text-white/80 transition-colors hover:text-white">
               <WhatsAppIcon className="size-6 shrink-0" />
               Join our WhatsApp community
               <ArrowRight size={14} className="text-purple-400" />
@@ -288,7 +288,7 @@ export default function Index() {
               <h2 className="mb-2 text-2xl font-bold text-white drop-shadow">Join Our Community</h2>
               <p className="mb-6 text-sm text-white/80 drop-shadow">Connect with thousands of happy users, get tips, and stay updated on new plans.</p>
               <motion.a
-                href={WHATSAPP_GROUP_URL}
+                href={whatsappGroupUrl}
                 target="_blank"
                 rel="noreferrer"
                 whileHover={{ scale: 1.06 }}

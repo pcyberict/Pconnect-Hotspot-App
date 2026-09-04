@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 import { Heart, MessageCircle } from "lucide-react";
 import Logo from "@/components/logo.tsx";
-import { WHATSAPP_GROUP_URL } from "@/lib/whatsapp.ts";
-import { useSiteName } from "@/lib/site-settings.ts";
+import { useSiteName, useWhatsAppGroupUrl } from "@/lib/site-settings.ts";
 
 export default function SiteFooter() {
   const siteName = useSiteName();
+  const whatsappGroupUrl = useWhatsAppGroupUrl();
 
   return (
     <footer className="mt-auto w-full shrink-0 border-t border-white/10 bg-[#0c0316] px-4 py-5 md:px-8">
@@ -14,7 +14,7 @@ export default function SiteFooter() {
           <div className="-mt-2 flex min-w-0 flex-col items-start md:-mt-10">
             <Logo variant="footer" className="leading-none" />
             <p className="-mt-2 max-w-xs text-sm leading-5 text-muted-foreground">Fast, reliable {siteName} Wi-Fi vouchers. Buy instantly, connect anywhere, anytime.</p>
-            <a href={WHATSAPP_GROUP_URL} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-2 text-sm font-medium leading-5 text-[#25D366] hover:underline">
+            <a href={whatsappGroupUrl} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-2 text-sm font-medium leading-5 text-[#25D366] hover:underline">
               <MessageCircle className="size-4" />Join our WhatsApp community
             </a>
           </div>

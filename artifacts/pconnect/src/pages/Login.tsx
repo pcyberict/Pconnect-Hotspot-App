@@ -6,14 +6,12 @@ import { useAuth } from "@/hooks/use-auth.ts";
 import SiteHeader from "@/components/site-header.tsx";
 import SiteFooter from "@/components/site-footer.tsx";
 import WhatsAppIcon from "@/components/whatsapp-icon.tsx";
-import { useSiteAsset, useSiteName } from "@/lib/site-settings.ts";
+import { useSiteAsset, useSiteName, useWhatsAppGroupUrl } from "@/lib/site-settings.ts";
 import { getPostAuthDestination } from "@/lib/auth-redirect.ts";
 import { useDeferredImage } from "@/lib/deferred-image.ts";
 
 const DEFAULT_LOGIN_LOGO = "/images/login-logo.webp";
 const DEFAULT_LOGIN_BG = "/images/login-bg.webp";
-const WHATSAPP_URL = "https://chat.whatsapp.com/your-group-invite";
-
 type LoginProps = {
   registrationOnly?: boolean;
 };
@@ -22,6 +20,7 @@ export default function Login({ registrationOnly = false }: LoginProps) {
   const { login, register, isLoading } = useAuth();
   const siteName = useSiteName();
   const loginLogo = useSiteAsset("login_logo", DEFAULT_LOGIN_LOGO);
+  const whatsappGroupUrl = useWhatsAppGroupUrl();
   const loadBackgroundImage = useDeferredImage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -178,7 +177,7 @@ export default function Login({ registrationOnly = false }: LoginProps) {
                        <a href="/forgot-password" className="text-xs text-purple-300 hover:text-purple-200">Forgot password?</a>
                        <span className="text-xs text-white/30">OR</span>
                      </div>
-                    <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl border border-[#25d366]/30 bg-[#25d366]/5 backdrop-blur-sm px-4 py-3 text-sm text-white hover:bg-[#25d366]/20 transition-colors">
+                    <a href={whatsappGroupUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl border border-[#25d366]/30 bg-[#25d366]/5 backdrop-blur-sm px-4 py-3 text-sm text-white hover:bg-[#25d366]/20 transition-colors">
                       <WhatsAppIcon className="size-6 shrink-0" />
                       <span className="font-medium">Join WhatsApp Group</span>
                     </a>
@@ -224,7 +223,7 @@ export default function Login({ registrationOnly = false }: LoginProps) {
                       <span className="text-xs text-white/30">OR</span>
                       <div className="flex-1 h-px bg-white/10" />
                     </div>
-                    <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl border border-[#25d366]/30 bg-[#25d366]/5 backdrop-blur-sm px-4 py-3 text-sm text-white hover:bg-[#25d366]/20 transition-colors">
+                    <a href={whatsappGroupUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl border border-[#25d366]/30 bg-[#25d366]/5 backdrop-blur-sm px-4 py-3 text-sm text-white hover:bg-[#25d366]/20 transition-colors">
                       <WhatsAppIcon className="size-6 shrink-0" />
                       <span className="font-medium">Join WhatsApp Group</span>
                     </a>

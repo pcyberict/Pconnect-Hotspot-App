@@ -7,13 +7,14 @@ import { Button } from "@/components/ui/button.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { useAuth } from "@/hooks/use-auth.ts";
 import { formatNaira } from "@/lib/plans.ts";
-import { WHATSAPP_GROUP_URL } from "@/lib/whatsapp.ts";
+import { useWhatsAppGroupUrl } from "@/lib/site-settings.ts";
 import { getRegistrationUrl } from "@/lib/auth-redirect.ts";
 
 function DashboardInner() {
   const { user } = useAuth();
   const wallet = useQuery(api.wallets.getMyWallet, {});
   const dashboardStats = useQuery<{ activeVouchers: number; totalPurchases: number }>(api.users.getDashboardStats, {});
+  const whatsappGroupUrl = useWhatsAppGroupUrl();
   const firstName = user?.profile.name?.split(" ")[0] ?? "there";
 
   return (
@@ -74,7 +75,7 @@ function DashboardInner() {
           </Link>
         </Button>
         <Button asChild variant="secondary" size="lg">
-          <a href={WHATSAPP_GROUP_URL} target="_blank" rel="noreferrer">
+          <a href={whatsappGroupUrl} target="_blank" rel="noreferrer">
             <MessageCircle className="size-4" />
             WhatsApp Support
           </a>
