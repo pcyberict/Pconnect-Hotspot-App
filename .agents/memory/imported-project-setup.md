@@ -15,6 +15,12 @@ An imported workspace can contain `.replit-artifact/artifact.toml` files while t
 
 **How to apply:** Check artifact and workflow registration separately after install; if both are absent, treat preview registration as explicit setup work instead of silently creating a replacement workflow during an unrelated feature fix.
 
+If temporary manual workflows are used before imported artifacts finish registering, remove them before starting the managed services; otherwise both processes can claim the artifact ports and make the managed restart fail with `EADDRINUSE`.
+
+**Why:** Artifact registration can complete asynchronously after the initial import snapshot, so a port that looked unowned may already belong to a temporary process when managed workflows become available.
+
+**How to apply:** Prefer managed artifact workflow names once registration appears, and inspect/stop any temporary processes before restarting them.
+
 For database-backed page metadata, a static artifact build cannot resolve values that only exist when the runtime API and database are running. The production web service must inject those values while serving HTML, with static fallback metadata for API outages.
 
 **Why:** Social crawlers read the initial HTML and do not wait for a client-side settings query; build-time fallback values otherwise remain visible in shared links even after an admin changes branding.

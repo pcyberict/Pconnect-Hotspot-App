@@ -142,11 +142,26 @@ async function request(fn: Endpoint, args: Args = {}, method: "GET" | "POST" = "
   } finally {
     window.clearTimeout(timeout);
   }
-  const body = await response.json().catch(() => undefined);
-  if (body === undefined) {
-    throw new Error("The API server is unavailable. Please check the server and database connection.");
+  const responseText = await response.text();
+  let body: Record<string, any> | unknown = undefined;
+  try {
+    body = responseText ? JSON.parse(responseText) : undefined;
+  } catch {
+    body = undefined;
   }
-  if (!response.ok) throw new Error(body.error ?? "Request failed");
+  if (body === undefined) {
+    throw new Error(
+      response.ok
+        ? "The API server returned an invalid response. Please try again."
+        : "The API server is unavailable. Please check the server and database connection.",
+    );
+  }
+  if (!response.ok) {
+    const errorMessage = body && typeof body === "object" && "error" in body
+      ? String((body as { error?: unknown }).error ?? "Request failed")
+      : "Request failed";
+    throw new Error(errorMessage);
+  }
   // Settings keys are user-configured database keys (for example,
   // `site_name` and `smtp_host`), not API response property names. Keep them
   // untouched so the admin form can rehydrate the same keys after navigation.

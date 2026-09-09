@@ -3,7 +3,7 @@ import { Authenticated, Unauthenticated, AuthLoading, useQuery, useMutation, use
 import { toast } from "sonner";
 import {
   Wallet, ArrowDownCircle, Clock, CheckCircle2, AlertCircle,
-  Eye, EyeOff, Building2, CreditCard, Copy, Zap, ChevronDown,
+  Eye, EyeOff, Building2, CreditCard, Copy, Zap, ChevronDown, Loader2,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { api } from "@/lib/pconnect-api.ts";
@@ -104,9 +104,25 @@ function WalletInner() {
   const [showAccountSetup, setShowAccountSetup] = useState(false);
   const [identityType, setIdentityType] = useState<"bvn" | "nin">("bvn");
   const [identityNumber, setIdentityNumber] = useState("");
+  const [creatingAccount, setCreatingAccount] = useState(false);
 
   const parsedAmount = parseFloat(amount);
   const validAmount = !isNaN(parsedAmount) && parsedAmount >= 100;
+
+  const handleCreateAccount = async () => {
+    if (identityNumber.length !== 11 || creatingAccount) return;
+    setCreatingAccount(true);
+    try {
+      await generateVirtualAccount({ identityType, identityNumber });
+      setIdentityNumber("");
+      setShowAccountSetup(false);
+      toast.success("Your permanent bank account is ready.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not create the bank account. Please try again.");
+    } finally {
+      setCreatingAccount(false);
+    }
+  };
 
   const statusColor = (status: string) => {
     if (status === "successful") return "text-emerald-400";
@@ -238,10 +254,10 @@ function WalletInner() {
               <Button
                 variant="glossy"
                 className="h-12 w-full px-5 sm:w-auto"
-                disabled={identityNumber.length !== 11}
-                onClick={() => void generateVirtualAccount({ identityType, identityNumber })}
+                disabled={identityNumber.length !== 11 || creatingAccount}
+                onClick={() => void handleCreateAccount()}
               >
-                Create account
+                {creatingAccount ? <><Loader2 size={14} className="animate-spin" /> Creating…</> : "Create account"}
               </Button>
             </div>
           )}
