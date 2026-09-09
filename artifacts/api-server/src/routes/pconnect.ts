@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { pool } from "@workspace/db";
 import { createHash, createHmac, randomBytes, randomInt, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { emailLayout, sendEmail } from "../lib/mailer";
@@ -135,6 +135,7 @@ async function createFlutterwaveVirtualAccount(user: Record<string, unknown>, id
   const response = await fetch("https://api.flutterwave.com/v3/virtual-account-numbers", {
     method: "POST",
     headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" },
+    signal: AbortSignal.timeout(15_000),
     body: JSON.stringify({
       email: user.email,
       firstname: fullName[0] ?? "Pconnect",
@@ -426,7 +427,7 @@ router.get("/wallet", async (req, res) => {
   return res.json(result.rows[0] ? withId(result.rows[0]) : null);
 });
 
-router.post("/wallet/virtual-account", async (req, res) => {
+async function handleVirtualAccountRequest(req: Request, res: Response) {
   const user = await currentUser(tokenFor(req));
   const identityType = req.body?.identityType === "nin" ? "nin" : "bvn";
   const identityNumber = String(req.body?.identityNumber ?? "").replace(/\s/g, "");
@@ -442,7 +443,12 @@ router.post("/wallet/virtual-account", async (req, res) => {
   } catch (error) {
     return res.status(502).json({ error: error instanceof Error ? error.message : "Could not create virtual account" });
   }
-});
+}
+
+router.post("/wallet/virtual-account", handleVirtualAccountRequest);
+// Keep the legacy deposits path working for clients built before the wallet
+// compatibility adapter was introduced.
+router.post("/deposits/virtual-account", handleVirtualAccountRequest);
 
 router.post("/webhooks/flutterwave", async (req, res) => {
   const expectedHash = String((await pool.query("SELECT value FROM pconnect_site_settings WHERE key='flutterwave_webhook_hash'")).rows[0]?.value ?? "");
